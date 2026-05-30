@@ -292,7 +292,8 @@ footer a{color:var(--lime);text-decoration:none;}
           <div style="font-size:.82rem;color:var(--muted);">
             Get your free key in 2 minutes →
             <a class="api-link" href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>
-            · Sign up free · No credit card
+            · Sign up free · No credit card.
+            <br><span style="font-size:.78rem;">Tip: to hide this box permanently, paste your key into the GROQ_API_KEY line near the top of the page code.</span>
           </div>
         </div>
         <div class="api-status" id="api-status-badge">
@@ -419,11 +420,36 @@ footer a{color:var(--lime);text-decoration:none;}
 </footer>
 
 <script>
+/* ══════════════════════════════════════════════════════════════════
+   ⚙️  CONFIGURATION — PASTE YOUR FREE GROQ API KEY BELOW
+   ──────────────────────────────────────────────────────────────────
+   1. Get a free key at:  https://console.groq.com/keys
+      (sign up free, click "Create API Key", copy it)
+   2. Paste it between the quotes on the next line.
+   3. Save the file and re-upload to GitHub.
+
+   When a key is set here, the key-entry box is HIDDEN from the page
+   and the site works automatically for everyone who visits.
+
+   ⚠️ NOTE: a public GitHub repo means this key is visible in the page
+   source. A free Groq key has NO billing risk (only rate limits). If
+   it ever gets abused, just regenerate it on the Groq site, or make
+   your repository Private in GitHub settings.
+   ══════════════════════════════════════════════════════════════════ */
+const GROQ_API_KEY = "";   // ← paste your key here, e.g. "gsk_xxxxxxxx"
+/* ════════════════════════════════════════════════════════════════ */
+
 // ── STATE ──────────────────────────────────────────
 let dietChoice = 'vegetarian';
-const EQUIPMENT = ["Life Fitness Treadmill","Life Fitness ICG Spinning Bike","Life Cycle Recumbent Bike","HiRower Rowing Machine","Ramp Up Dumbbells 2.5–30kg","Life Fitness Adjustable Bench","Life Fitness Functional Trainer & Cable Machine with Pull-up Bar","Life Fitness Chest Press / Incline Press / Shoulder Press Machine","Life Fitness Lat Pulldown & Seated Row Machine","Life Fitness Seated Leg Curl & Leg Extension Machine","Stability Ball","Xpeed Step Platform","Resistance Bands","Yoga Mat","Foam Rollers"];
+window.ALL_EXERCISES = [];
+const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+const EQUIPMENT = ["Life Fitness Treadmill","Life Fitness ICG Spinning Bike","Life Cycle Recumbent Bike","HiRower Rowing Machine","Ramp Up Dumbbells 2.5-30kg","Life Fitness Adjustable Bench","Life Fitness Functional Trainer & Cable Machine with Pull-up Bar","Life Fitness Chest/Incline/Shoulder Press Machine","Life Fitness Lat Pulldown & Seated Row Machine","Life Fitness Seated Leg Curl & Leg Extension Machine","Stability Ball","Xpeed Step Platform","Resistance Bands","Yoga Mat","Foam Rollers"];
 
 // ── API KEY ──────────────────────────────────────────
+function getApiKey() {
+  if (GROQ_API_KEY && GROQ_API_KEY.trim()) return GROQ_API_KEY.trim();
+  return localStorage.getItem('groq_api_key') || '';
+}
 function saveApiKey() {
   const val = document.getElementById('api-key-input').value.trim();
   if (!val) return;
@@ -435,25 +461,22 @@ function clearApiKey() {
   document.getElementById('api-key-input').value = '';
   updateApiStatus(false);
 }
-function getApiKey() { return localStorage.getItem('groq_api_key') || ''; }
 function updateApiStatus(ok) {
   const dot = document.getElementById('api-dot');
   const txt = document.getElementById('api-status-text');
   const box = document.getElementById('api-box');
-  if (ok) {
-    dot.className = 'api-dot ok';
-    txt.textContent = 'API key saved ✓';
-    txt.style.color = '#00CF64';
-    box.classList.add('connected');
-  } else {
-    dot.className = 'api-dot err';
-    txt.textContent = 'No key entered';
-    txt.style.color = 'var(--muted)';
-    box.classList.remove('connected');
-  }
+  if (!dot) return;
+  if (ok) { dot.className='api-dot ok'; txt.textContent='API key saved'; txt.style.color='#00CF64'; box.classList.add('connected'); }
+  else { dot.className='api-dot err'; txt.textContent='No key entered'; txt.style.color='var(--muted)'; box.classList.remove('connected'); }
 }
-(function init() {
-  const k = getApiKey();
+(function initKey() {
+  // If a key is hardcoded in CONFIG, hide the whole setup box entirely
+  if (GROQ_API_KEY && GROQ_API_KEY.trim()) {
+    const box = document.getElementById('api-box');
+    if (box) box.style.display = 'none';
+    return;
+  }
+  const k = localStorage.getItem('groq_api_key');
   if (k) { document.getElementById('api-key-input').value = k; updateApiStatus(true); }
 })();
 
@@ -464,114 +487,138 @@ function getGoals() { return [...document.querySelectorAll('.goal-card.active')]
 // ── DIET ──────────────────────────────────────────
 function setDiet(type) {
   dietChoice = type;
-  document.getElementById('veg-btn').classList.toggle('active', type === 'vegetarian');
-  document.getElementById('nonveg-btn').classList.toggle('active', type === 'non-vegetarian');
-  document.getElementById('diet-note').textContent = type === 'vegetarian'
-    ? 'Meal plans based on 30 healthy bowl recipes — wholesome plant-based, global grain bowls, high-protein options.'
-    : 'Non-vegetarian meal plan with lean proteins (chicken, eggs, fish) combined with healthy grain bowl base recipes.';
+  document.getElementById('veg-btn').classList.toggle('active', type==='vegetarian');
+  document.getElementById('nonveg-btn').classList.toggle('active', type==='non-vegetarian');
+  document.getElementById('diet-note').textContent = type==='vegetarian'
+    ? 'Meal plans based on 30 healthy bowl recipes - plant-based, global grain bowls, high-protein options.'
+    : 'Non-vegetarian meal plan with lean proteins (chicken, eggs, fish) combined with healthy grain bowl recipes.';
 }
 
 // ── BMI ──────────────────────────────────────────
 function updateBMI() {
   const h = parseFloat(document.getElementById('height').value);
   const w = parseFloat(document.getElementById('weight').value);
-  if (!h || !w || h < 100 || w < 20) { document.getElementById('bmi-display').style.display = 'none'; return; }
-  const bmi = w / ((h / 100) ** 2);
-  const bmiR = Math.round(bmi * 10) / 10;
-  let cat, color, advice, pct;
-  if (bmi < 18.5) { cat='Underweight'; color='#4B9FFF'; pct=(bmi/18.5)*20; advice='Focus on caloric surplus and muscle building.'; }
-  else if (bmi < 25) { cat='Healthy Weight ✓'; color='#C8FF3E'; pct=20+((bmi-18.5)/6.5)*30; advice='Great foundation! Focus on performance and toning.'; }
-  else if (bmi < 30) { cat='Overweight'; color='#FF8C4B'; pct=50+((bmi-25)/5)*25; advice='Combine cardio with strength training and caloric deficit.'; }
-  else { cat='Obese'; color='#FF4B4B'; pct=Math.min(95,75+((bmi-30)/10)*20); advice='Start with low-impact cardio (recumbent bike, rowing) and build progressively.'; }
-  document.getElementById('bmi-display').style.display = 'flex';
-  document.getElementById('bmi-value').textContent = bmiR;
-  document.getElementById('bmi-value').style.color = color;
-  document.getElementById('bmi-cat').textContent = cat;
-  document.getElementById('bmi-cat').style.color = color;
-  document.getElementById('bmi-marker').style.left = pct + '%';
-  document.getElementById('bmi-advice').textContent = advice;
+  if (!h || !w || h<100 || w<20) { document.getElementById('bmi-display').style.display='none'; return; }
+  const bmi = w/((h/100)**2), bmiR = Math.round(bmi*10)/10;
+  let cat,color,advice,pct;
+  if (bmi<18.5){cat='Underweight';color='#4B9FFF';pct=(bmi/18.5)*20;advice='Focus on caloric surplus and muscle building.';}
+  else if(bmi<25){cat='Healthy Weight';color='#C8FF3E';pct=20+((bmi-18.5)/6.5)*30;advice='Great foundation! Focus on performance and toning.';}
+  else if(bmi<30){cat='Overweight';color='#FF8C4B';pct=50+((bmi-25)/5)*25;advice='Combine cardio with strength training and caloric deficit.';}
+  else{cat='Obese';color='#FF4B4B';pct=Math.min(95,75+((bmi-30)/10)*20);advice='Start with low-impact cardio (recumbent bike, rowing) and build progressively.';}
+  document.getElementById('bmi-display').style.display='flex';
+  document.getElementById('bmi-value').textContent=bmiR;
+  document.getElementById('bmi-value').style.color=color;
+  document.getElementById('bmi-cat').textContent=cat;
+  document.getElementById('bmi-cat').style.color=color;
+  document.getElementById('bmi-marker').style.left=pct+'%';
+  document.getElementById('bmi-advice').textContent=advice;
 }
 
 // ── TABS ──────────────────────────────────────────
 function showTab(tab, btn) {
-  document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.result-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById(tab + '-panel').classList.add('active');
+  document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.result-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(tab+'-panel').classList.add('active');
   if (btn) btn.classList.add('active');
 }
 
-// ── JSON EXTRACTION ──────────────────────────────────────────
+// ── ROBUST JSON EXTRACTION + REPAIR ──────────────────────────────────────────
 function extractJSON(text) {
-  try { return JSON.parse(text); } catch(e) {}
-  const m1 = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  if (m1) { try { return JSON.parse(m1[1]); } catch(e) {} }
-  const m2 = text.match(/\{[\s\S]*\}/);
-  if (m2) { try { return JSON.parse(m2[0]); } catch(e) {} }
-  return null;
+  if (!text) return null;
+  try { return JSON.parse(text); } catch(e){}
+  const m = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (m) { try { return JSON.parse(m[1]); } catch(e){} }
+  const start = text.indexOf('{');
+  if (start === -1) return null;
+  let s = text.slice(start);
+  try { return JSON.parse(s); } catch(e){}
+  // REPAIR truncated JSON: close any open strings/brackets/braces
+  const opens = []; let inStr=false, esc=false;
+  for (let i=0;i<s.length;i++){
+    const c=s[i];
+    if(esc){esc=false;continue;}
+    if(c==='\\'){esc=true;continue;}
+    if(c==='"'){inStr=!inStr;continue;}
+    if(inStr)continue;
+    if(c==='{')opens.push('}');
+    else if(c==='[')opens.push(']');
+    else if(c==='}'||c===']')opens.pop();
+  }
+  let rep = s;
+  if(inStr) rep += '"';
+  rep = rep.replace(/,\s*$/,'');
+  while(opens.length) rep += opens.pop();
+  try { return JSON.parse(rep); } catch(e){ return null; }
 }
 
 // ── DAY THEME ──────────────────────────────────────────
 function getDayTheme(label) {
   const l = (label||'').toLowerCase();
-  if (l.includes('rest') || l.includes('recovery')) return { color:'#888987', bg:'rgba(136,137,135,0.12)', label:'Rest' };
-  if (l.includes('full')) return { color:'#00CFCF', bg:'rgba(0,207,207,0.12)', label:'Full Body' };
-  if (l.includes('upper') || l.includes('chest') || l.includes('shoulder')) return { color:'#4B9FFF', bg:'rgba(75,159,255,0.12)', label:'Upper Body' };
-  if (l.includes('lower') || l.includes('leg')) return { color:'#FF8C4B', bg:'rgba(255,140,75,0.12)', label:'Legs' };
-  if (l.includes('back') || l.includes('pull')) return { color:'#B87AFF', bg:'rgba(184,122,255,0.12)', label:'Back' };
-  if (l.includes('cardio') || l.includes('hiit') || l.includes('run')) return { color:'#FF4B7A', bg:'rgba(255,75,122,0.12)', label:'Cardio' };
-  if (l.includes('core') || l.includes('abs')) return { color:'#C8FF3E', bg:'rgba(200,255,62,0.12)', label:'Core' };
-  return { color:'#C8FF3E', bg:'rgba(200,255,62,0.12)', label:'Workout' };
+  if (l.includes('rest')||l.includes('recovery')) return {color:'#888987',bg:'rgba(136,137,135,0.12)',label:'Rest'};
+  if (l.includes('full')) return {color:'#00CFCF',bg:'rgba(0,207,207,0.12)',label:'Full Body'};
+  if (l.includes('upper')||l.includes('chest')||l.includes('shoulder')) return {color:'#4B9FFF',bg:'rgba(75,159,255,0.12)',label:'Upper Body'};
+  if (l.includes('lower')||l.includes('leg')) return {color:'#FF8C4B',bg:'rgba(255,140,75,0.12)',label:'Legs'};
+  if (l.includes('back')||l.includes('pull')) return {color:'#B87AFF',bg:'rgba(184,122,255,0.12)',label:'Back'};
+  if (l.includes('cardio')||l.includes('hiit')||l.includes('run')) return {color:'#FF4B7A',bg:'rgba(255,75,122,0.12)',label:'Cardio'};
+  if (l.includes('core')||l.includes('abs')) return {color:'#C8FF3E',bg:'rgba(200,255,62,0.12)',label:'Core'};
+  return {color:'#C8FF3E',bg:'rgba(200,255,62,0.12)',label:'Workout'};
 }
 
 // ── RENDER WORKOUT GRID ──────────────────────────────────────────
 function renderWorkoutGrid(data) {
   const panel = document.getElementById('workout-panel');
-  if (!data || !data.weeklySchedule) { panel.innerHTML = '<p style="color:var(--muted)">Could not parse workout data.</p>'; return; }
+  const sched = data && (data.weeklySchedule || data.schedule || data.week);
+  if (!Array.isArray(sched) || sched.length === 0) {
+    panel.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2rem;text-align:center;color:var(--muted);">Could not build the workout grid. Please click <strong style="color:var(--lime)">Generate</strong> again.</div>';
+    return;
+  }
+  window.ALL_EXERCISES = [];
   let html = '';
-  if (data.notes) html += `<div class="plan-notes"><strong>📋 Weekly Note:</strong> ${data.notes}</div>`;
+  if (data.notes) html += `<div class="plan-notes"><strong>📋 Weekly Note:</strong> ${esc(data.notes)}</div>`;
   html += '<div class="week-grid">';
-  data.weeklySchedule.forEach(day => {
+  sched.forEach(day => {
     const theme = getDayTheme(day.label || day.focus || '');
-    html += `<div class="day-card">
-      <div class="day-header" style="border-left:3px solid ${theme.color};">
-        <div class="day-name" style="color:${theme.color};">${day.day}</div>
-        <div class="day-focus">${day.label || day.focus || ''}</div>
-        <span class="day-badge" style="background:${theme.bg};color:${theme.color};">${theme.label}</span>
-      </div>`;
-    if (day.restDay || !day.exercises || day.exercises.length === 0) {
-      html += `<div class="day-rest"><span class="day-rest-icon">🛌</span>Rest & Recovery<br><span style="font-size:.75rem;">Foam roll, light stretch</span></div>`;
+    const exs = day.exercises || [];
+    html += `<div class="day-card"><div class="day-header" style="border-left:3px solid ${theme.color};">
+      <div class="day-name" style="color:${theme.color};">${esc(day.day||'Day')}</div>
+      <div class="day-focus">${esc(day.label||day.focus||'')}</div>
+      <span class="day-badge" style="background:${theme.bg};color:${theme.color};">${theme.label}</span></div>`;
+    if (day.restDay || exs.length === 0) {
+      html += `<div class="day-rest"><span class="day-rest-icon">🛌</span>Rest &amp; Recovery<br><span style="font-size:.75rem;">Foam roll, light stretch</span></div>`;
     } else {
       html += '<div class="day-body">';
-      day.exercises.forEach((ex, i) => {
-        const safeEx = JSON.stringify(ex).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        html += `<div class="exercise-chip" onclick='openPanel(${JSON.stringify(ex).replace(/'/g,"\\'")})'> 
+      exs.forEach(ex => {
+        const idx = window.ALL_EXERCISES.push(ex) - 1;
+        html += `<div class="exercise-chip" data-ex="${idx}" onclick="openPanelByIndex(this)">
           <div class="ex-dot" style="background:${theme.color};"></div>
-          <div><div class="ex-name">${ex.name}</div><div class="ex-meta">${ex.sets}×${ex.reps} · ${ex.rest}</div></div>
-        </div>`;
+          <div><div class="ex-name">${esc(ex.name||'Exercise')}</div><div class="ex-meta">${esc(ex.sets||'')}×${esc(ex.reps||'')} · ${esc(ex.rest||'')}</div></div></div>`;
       });
       html += '</div>';
     }
     html += '</div>';
   });
-  html += '</div>';
-  html += '<p style="font-size:.8rem;color:var(--muted);margin-top:.5rem;">👆 Click any exercise to see step-by-step form guide</p>';
+  html += '</div><p style="font-size:.8rem;color:var(--muted);margin-top:.5rem;">👆 Click any exercise to see step-by-step form guide</p>';
   panel.innerHTML = html;
 }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ── EXERCISE PANEL ──────────────────────────────────────────
+function openPanelByIndex(el) {
+  const ex = window.ALL_EXERCISES[parseInt(el.dataset.ex)];
+  if (ex) openPanel(ex);
+}
 function openPanel(ex) {
-  if (typeof ex === 'string') { try { ex = JSON.parse(ex); } catch(e) { return; } }
-  document.getElementById('ep-name').textContent = ex.name || '—';
+  document.getElementById('ep-name').textContent = ex.name || 'Exercise';
   document.getElementById('ep-equipment').textContent = ex.equipment || '—';
-  document.getElementById('ep-sets').textContent = ex.sets || '—';
+  document.getElementById('ep-sets').textContent = ex.sets!=null ? ex.sets : '—';
   document.getElementById('ep-reps').textContent = ex.reps || '—';
   document.getElementById('ep-rest').textContent = ex.rest || '—';
-  const muscles = (ex.muscles || '').split(',').map(m => `<span class="ex-muscle-tag">${m.trim()}</span>`).join('');
+  const muscles = (ex.muscles||'').split(',').filter(m=>m.trim()).map(m=>`<span class="ex-muscle-tag">${esc(m.trim())}</span>`).join('');
   document.getElementById('ep-muscles').innerHTML = muscles || '<span class="ex-muscle-tag">General</span>';
-  const steps = (ex.howTo || ex.how_to || []);
-  document.getElementById('ep-howto').innerHTML = steps.map(s => `<li>${s}</li>`).join('') || '<li>Follow trainer guidance</li>';
-  document.getElementById('ep-tip').textContent = ex.tip || 'Focus on controlled form';
-  document.getElementById('ep-mistake').textContent = ex.mistake || 'Avoid rushing the movement';
+  const steps = ex.howTo || ex.how_to || ex.steps || [];
+  document.getElementById('ep-howto').innerHTML = (Array.isArray(steps)&&steps.length) ? steps.map(s=>`<li>${esc(s)}</li>`).join('') : '<li>Follow standard form for this exercise.</li>';
+  document.getElementById('ep-tip').textContent = ex.tip || 'Focus on slow, controlled form.';
+  document.getElementById('ep-mistake').textContent = ex.mistake || 'Avoid rushing or using momentum.';
   document.getElementById('ex-overlay').classList.add('open');
   document.getElementById('ex-panel').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -585,200 +632,145 @@ function closePanel() {
 // ── RENDER DIET ──────────────────────────────────────────
 function renderDietGrid(data) {
   const panel = document.getElementById('diet-panel');
-  if (!data || !data.mealPlan) { panel.innerHTML = '<p style="color:var(--muted)">Could not parse diet data.</p>'; return; }
+  const plan = data && (data.mealPlan || data.meal_plan || data.days);
+  if (!Array.isArray(plan) || plan.length === 0) {
+    panel.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2rem;text-align:center;color:var(--muted);">Could not build the diet grid. Please click <strong style="color:var(--lime)">Generate</strong> again.</div>';
+    return;
+  }
   let html = '';
   if (data.calories || data.macros) {
-    html += '<div class="macro-bar">';
-    html += `<div class="macro-card"><div class="macro-val">${data.calories||'—'}</div><div class="macro-lbl">Calories / Day</div></div>`;
     const m = data.macros || {};
-    html += `<div class="macro-card"><div class="macro-val">${m.protein||'—'}</div><div class="macro-lbl">Protein</div></div>`;
-    html += `<div class="macro-card"><div class="macro-val">${m.carbs||'—'}</div><div class="macro-lbl">Carbs</div></div>`;
-    html += `<div class="macro-card"><div class="macro-val">${m.fat||m.fats||'—'}</div><div class="macro-lbl">Fats</div></div>`;
+    html += '<div class="macro-bar">';
+    html += `<div class="macro-card"><div class="macro-val">${esc(data.calories||'—')}</div><div class="macro-lbl">Calories / Day</div></div>`;
+    html += `<div class="macro-card"><div class="macro-val">${esc(m.protein||'—')}</div><div class="macro-lbl">Protein</div></div>`;
+    html += `<div class="macro-card"><div class="macro-val">${esc(m.carbs||'—')}</div><div class="macro-lbl">Carbs</div></div>`;
+    html += `<div class="macro-card"><div class="macro-val">${esc(m.fat||m.fats||'—')}</div><div class="macro-lbl">Fats</div></div>`;
     html += '</div>';
   }
   html += '<div class="diet-week-grid">';
-  data.mealPlan.forEach(day => {
+  plan.forEach(day => {
     const meals = [
-      { type:'Breakfast', data: day.breakfast },
-      { type:'Snack', data: day.snack || day.midSnack },
-      { type:'Lunch', data: day.lunch },
-      { type:'Dinner', data: day.dinner }
-    ].filter(m => m.data);
-    const totalCal = meals.reduce((s, m) => s + (parseInt(m.data.calories) || 0), 0);
-    html += `<div class="diet-day-card">
-      <div class="diet-day-head">
-        <div class="diet-day-name">${day.day}</div>
-        ${totalCal ? `<div class="diet-day-cal">~${totalCal} kcal</div>` : ''}
-      </div>
-      <div class="meal-list">`;
-    meals.forEach(m => {
-      html += `<div class="meal-row">
-        <div class="meal-type">${m.type}</div>
-        <div class="meal-info">
-          <div class="meal-name">${m.data.name || '—'}</div>
-          <div class="meal-desc">${m.data.desc || ''}</div>
-          ${m.data.calories ? `<div class="meal-cal">${m.data.calories} kcal</div>` : ''}
-        </div>
-      </div>`;
+      {type:'Breakfast',data:day.breakfast},
+      {type:'Snack',data:day.snack||day.midSnack},
+      {type:'Lunch',data:day.lunch},
+      {type:'Dinner',data:day.dinner}
+    ].filter(x=>x.data);
+    const totalCal = meals.reduce((s,x)=>s+(parseInt(x.data.calories)||0),0);
+    html += `<div class="diet-day-card"><div class="diet-day-head"><div class="diet-day-name">${esc(day.day||'Day')}</div>${totalCal?`<div class="diet-day-cal">~${totalCal} kcal</div>`:''}</div><div class="meal-list">`;
+    meals.forEach(x=>{
+      html += `<div class="meal-row"><div class="meal-type">${x.type}</div><div class="meal-info"><div class="meal-name">${esc(x.data.name||'—')}</div><div class="meal-desc">${esc(x.data.desc||'')}</div>${x.data.calories?`<div class="meal-cal">${esc(x.data.calories)} kcal</div>`:''}</div></div>`;
     });
-    html += `</div></div>`;
+    html += '</div></div>';
   });
   html += '</div>';
-  if (data.tips && data.tips.length) {
-    html += `<div class="diet-tips"><div class="diet-tips-title">💡 Nutrition Tips</div>`;
-    data.tips.forEach(t => { html += `<div class="tip-item">${t}</div>`; });
+  if (Array.isArray(data.tips) && data.tips.length) {
+    html += '<div class="diet-tips"><div class="diet-tips-title">💡 Nutrition Tips</div>';
+    data.tips.forEach(t=>{ html += `<div class="tip-item">${esc(t)}</div>`; });
     html += '</div>';
   }
   panel.innerHTML = html;
 }
 
-// ── GROQ API CALL ──────────────────────────────────────────
+// ── GROQ API CALL (JSON mode + model fallback + clear errors) ──────────────
 async function callGroq(prompt, maxTokens) {
   const key = getApiKey();
-  if (!key) throw new Error('No API key. Please enter your free Groq API key above.');
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: maxTokens,
-      temperature: 0.7,
-      messages: [
-        { role: 'system', content: 'You are an expert personal trainer and nutritionist. Always respond with valid JSON only. No markdown, no code blocks, no extra text before or after the JSON.' },
-        { role: 'user', content: prompt }
-      ]
-    })
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `API error ${res.status}. Check your API key.`);
+  if (!key) throw new Error('No API key found. Please add your free Groq key.');
+  let lastErr = null;
+  for (const model of GROQ_MODELS) {
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+        body: JSON.stringify({
+          model,
+          max_tokens: maxTokens,
+          temperature: 0.6,
+          response_format: { type: 'json_object' },
+          messages: [
+            {role:'system',content:'You are an expert personal trainer and nutritionist. Respond ONLY with a single valid compact JSON object. No markdown, no code fences, no text outside the JSON.'},
+            {role:'user',content:prompt}
+          ]
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content || '';
+      }
+      const err = await res.json().catch(()=>({}));
+      const msg = (err.error && err.error.message) || '';
+      const code = (err.error && err.error.code) || '';
+      if (res.status === 401) throw new Error('Invalid API key. Please check your Groq key and save it again.');
+      if (res.status === 429) throw new Error('Rate limit reached on the free tier. Please wait about a minute and try again.');
+      if (res.status === 404 || code === 'model_not_found' || msg.toLowerCase().includes('model')) { lastErr = new Error('Model unavailable, trying backup model...'); continue; }
+      throw new Error(msg || ('API error ' + res.status + '. Please try again.'));
+    } catch(e) {
+      lastErr = e;
+      if (e.message && (e.message.includes('Invalid API key') || e.message.includes('Rate limit'))) throw e;
+      if (e.message && e.message.includes('Failed to fetch')) { lastErr = new Error('Network error - check your internet connection and try again.'); continue; }
+    }
   }
-  const data = await res.json();
-  return data.choices[0]?.message?.content || '';
+  throw lastErr || new Error('Could not reach the AI service. Please try again.');
 }
 
 // ── GENERATE PLAN ──────────────────────────────────────────
 async function generatePlan() {
-  const age = document.getElementById('age').value;
-  const height = document.getElementById('height').value;
-  const weight = document.getElementById('weight').value;
-  const targetWeight = document.getElementById('target_weight').value;
-  const gender = document.getElementById('gender').value;
-  const fitnessLevel = document.getElementById('fitness_level').value;
-  const daysWeek = parseInt(document.getElementById('days_week').value);
-  const duration = document.getElementById('duration').value;
-  const goals = getGoals();
-  const errorEl = document.getElementById('error-msg');
+  const age=document.getElementById('age').value, height=document.getElementById('height').value, weight=document.getElementById('weight').value;
+  const targetWeight=document.getElementById('target_weight').value, gender=document.getElementById('gender').value;
+  const fitnessLevel=document.getElementById('fitness_level').value, daysWeek=parseInt(document.getElementById('days_week').value), duration=document.getElementById('duration').value;
+  const goals=getGoals(), errorEl=document.getElementById('error-msg');
   errorEl.classList.remove('visible');
 
-  if (!age || !height || !weight) {
-    errorEl.textContent = '⚠️ Please fill in Age, Height and Weight.';
-    errorEl.classList.add('visible'); return;
-  }
-  if (goals.length === 0) {
-    errorEl.textContent = '⚠️ Please select at least one goal.';
-    errorEl.classList.add('visible'); return;
-  }
-  if (!getApiKey()) {
-    errorEl.textContent = '⚠️ Please enter your free Groq API key above. Get one at console.groq.com/keys';
-    errorEl.classList.add('visible'); return;
-  }
+  if(!age||!height||!weight){ errorEl.textContent='⚠️ Please fill in Age, Height and Weight.'; errorEl.classList.add('visible'); return; }
+  if(goals.length===0){ errorEl.textContent='⚠️ Please select at least one goal.'; errorEl.classList.add('visible'); return; }
+  if(!getApiKey()){ errorEl.textContent='⚠️ No AI key configured. Add your free Groq key, or paste it in the key box above.'; errorEl.classList.add('visible'); document.getElementById('planner').scrollIntoView({behavior:'smooth'}); return; }
 
-  const h = parseFloat(height), w = parseFloat(weight);
-  const bmi = Math.round((w / ((h/100)**2)) * 10) / 10;
-  const btn = document.getElementById('gen-btn');
-  btn.disabled = true; btn.classList.add('loading');
+  const h=parseFloat(height), w=parseFloat(weight), bmi=Math.round((w/((h/100)**2))*10)/10;
+  const btn=document.getElementById('gen-btn'); btn.disabled=true; btn.classList.add('loading');
 
   document.getElementById('results-section').classList.add('visible');
-  document.getElementById('workout-panel').innerHTML = '<div class="skeleton-grid">' + Array(daysWeek).fill('<div class="skeleton-card"></div>').join('') + '</div><p style="color:var(--muted);margin-top:1rem;font-size:.9rem;">Generating your workout plan with Llama 3 AI...</p>';
-  document.getElementById('diet-panel').innerHTML = '';
-  document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('workout-panel').innerHTML='<div class="skeleton-grid">'+Array(Math.max(daysWeek,4)).fill('<div class="skeleton-card"></div>').join('')+'</div><p style="color:var(--muted);margin-top:1rem;font-size:.9rem;">Generating your workout plan with Llama 3 AI... (10-20 seconds)</p>';
+  document.getElementById('diet-panel').innerHTML='';
+  document.getElementById('results-section').scrollIntoView({behavior:'smooth',block:'start'});
 
-  const workoutPrompt = `Create a ${daysWeek}-day weekly workout plan for this person.
-Profile: Age ${age}, Gender: ${gender||'unspecified'}, Height: ${height}cm, Weight: ${weight}kg, BMI: ${bmi}, Target: ${targetWeight||'not set'}kg, Level: ${fitnessLevel}, Goals: ${goals.join(', ')}, Session: ${duration}.
-Available equipment ONLY: ${EQUIPMENT.join(', ')}.
+  const workoutPrompt = `Create a ${daysWeek}-day weekly workout plan (include all 7 days, mark non-training days as rest).
+Profile: Age ${age}, Gender ${gender||'unspecified'}, Height ${height}cm, Weight ${weight}kg, BMI ${bmi}, Target ${targetWeight||'n/a'}kg, Level ${fitnessLevel}, Goals: ${goals.join(', ')}, Session ${duration}.
+Use ONLY this equipment: ${EQUIPMENT.join(', ')}.
+Output a JSON object with this exact shape:
+{"weeklySchedule":[{"day":"Monday","label":"Upper Body Strength","restDay":false,"exercises":[{"name":"...","sets":3,"reps":"10-12","rest":"60s","equipment":"...","muscles":"Primary, Secondary","howTo":["step 1","step 2","step 3"],"tip":"one tip","mistake":"one mistake"}]}],"notes":"short weekly note"}
+Rules: 4-5 exercises per training day. howTo = exactly 3 short steps. rest days have "restDay":true and "exercises":[]. Keep all text concise.`;
 
-Return ONLY this JSON structure (no markdown, no code blocks):
-{
-  "weeklySchedule": [
-    {
-      "day": "Monday",
-      "label": "Upper Body Strength",
-      "restDay": false,
-      "exercises": [
-        {
-          "name": "Exercise Name",
-          "sets": 3,
-          "reps": "10-12",
-          "rest": "60s",
-          "equipment": "specific equipment name",
-          "muscles": "Primary Muscle, Secondary Muscle",
-          "howTo": ["Step 1 instruction", "Step 2 instruction", "Step 3 instruction", "Step 4 instruction"],
-          "tip": "One key form tip",
-          "mistake": "Most common mistake to avoid"
-        }
-      ]
-    }
-  ],
-  "notes": "Overall weekly training note"
-}
-Include all 7 days. Set restDay:true for rest days with empty exercises array. Include 4-6 exercises per workout day. Make howTo have exactly 4 clear steps.`;
-
-  const dietPrompt = `Create a 7-day meal plan for: Age ${age}, ${gender||''}, ${height}cm, ${weight}kg, BMI ${bmi}, Goals: ${goals.join(', ')}, Diet: ${dietChoice}.
-${dietChoice === 'non-vegetarian' ? 'Include lean proteins: chicken, eggs, fish, turkey.' : 'Strictly vegetarian: tofu, paneer, legumes, dairy OK.'}
-Base meals on healthy grain bowl concepts with whole foods.
-
-Return ONLY this JSON (no markdown, no code blocks):
-{
-  "calories": 1800,
-  "macros": {"protein": "150g", "carbs": "180g", "fat": "55g"},
-  "mealPlan": [
-    {
-      "day": "Monday",
-      "breakfast": {"name": "Bowl name", "desc": "Brief description", "calories": 420},
-      "snack": {"name": "Snack name", "desc": "Brief description", "calories": 180},
-      "lunch": {"name": "Bowl name", "desc": "Brief description", "calories": 550},
-      "dinner": {"name": "Bowl name", "desc": "Brief description", "calories": 520}
-    }
-  ],
-  "tips": ["Tip 1", "Tip 2", "Tip 3", "Tip 4"]
-}
-Include all 7 days.`;
+  const dietPrompt = `Create a 7-day ${dietChoice} meal plan.
+Profile: Age ${age}, ${gender||''}, ${height}cm, ${weight}kg, BMI ${bmi}, Goals: ${goals.join(', ')}.
+${dietChoice==='non-vegetarian'?'Include lean proteins: chicken, eggs, fish, turkey.':'Strictly vegetarian: tofu, paneer, legumes, dairy OK. No meat/fish/egg.'}
+Base meals on healthy grain bowls and whole foods.
+Output a JSON object with this exact shape:
+{"calories":1800,"macros":{"protein":"150g","carbs":"180g","fat":"55g"},"mealPlan":[{"day":"Monday","breakfast":{"name":"...","desc":"short","calories":420},"snack":{"name":"...","desc":"short","calories":180},"lunch":{"name":"...","desc":"short","calories":550},"dinner":{"name":"...","desc":"short","calories":520}}],"tips":["tip 1","tip 2","tip 3"]}
+Include all 7 days. Keep descriptions under 8 words.`;
 
   try {
-    // Generate workout
-    const workoutRaw = await callGroq(workoutPrompt, 3000);
+    const workoutRaw = await callGroq(workoutPrompt, 8000);
     const workoutData = extractJSON(workoutRaw);
-    if (workoutData) {
-      renderWorkoutGrid(workoutData);
-    } else {
-      document.getElementById('workout-panel').innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;white-space:pre-wrap;font-size:.88rem;color:#CCC;">${workoutRaw}</div>`;
-    }
+    renderWorkoutGrid(workoutData);
 
-    // Generate diet
-    document.getElementById('diet-panel').innerHTML = '<p style="color:var(--muted);font-size:.9rem;">Generating your meal plan...</p>';
-    const dietRaw = await callGroq(dietPrompt, 2500);
+    document.getElementById('diet-panel').innerHTML='<p style="color:var(--muted);font-size:.9rem;">Generating your meal plan...</p>';
+    const dietRaw = await callGroq(dietPrompt, 6000);
     const dietData = extractJSON(dietRaw);
-    if (dietData) {
-      renderDietGrid(dietData);
-    } else {
-      document.getElementById('diet-panel').innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;white-space:pre-wrap;font-size:.88rem;color:#CCC;">${dietRaw}</div>`;
-    }
-
+    renderDietGrid(dietData);
   } catch(err) {
-    errorEl.textContent = '⚠️ ' + err.message;
+    errorEl.textContent='⚠️ '+err.message;
     errorEl.classList.add('visible');
-    document.getElementById('workout-panel').innerHTML = '';
+    document.getElementById('workout-panel').innerHTML='<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2rem;text-align:center;color:var(--muted);">'+esc(err.message)+'<br><br>Please fix the issue above and click Generate again.</div>';
+    document.getElementById('planner').scrollIntoView({behavior:'smooth'});
   } finally {
-    btn.disabled = false; btn.classList.remove('loading');
+    btn.disabled=false; btn.classList.remove('loading');
   }
 }
 
 // ── PRINT ──────────────────────────────────────────
 function printPlan() {
-  const w = window.open('', '_blank');
-  w.document.write(`<!DOCTYPE html><html><head><title>GymGenius — My Plan</title><style>body{font-family:Arial,sans-serif;max-width:900px;margin:2rem auto;color:#111;line-height:1.6}h1{border-bottom:3px solid #000;padding-bottom:8px}.section{margin-bottom:3rem}@media print{}</style></head><body><h1>🏋️ GymGenius — My Fitness Plan</h1><div class="section"><h2>Weekly Workout</h2>${document.getElementById('workout-panel').innerHTML}</div><div class="section"><h2>Diet Plan</h2>${document.getElementById('diet-panel').innerHTML}</div></body></html>`);
-  w.document.close(); setTimeout(() => w.print(), 600);
+  const win = window.open('','_blank');
+  win.document.write('<!DOCTYPE html><html><head><title>GymGenius - My Plan</title><style>body{font-family:Arial,sans-serif;max-width:900px;margin:2rem auto;color:#111;line-height:1.6}h1{border-bottom:3px solid #000;padding-bottom:8px}.day-card,.diet-day-card{border:1px solid #ccc;border-radius:8px;padding:10px;margin-bottom:10px;page-break-inside:avoid}.section{margin-bottom:3rem}</style></head><body><h1>GymGenius - My Fitness Plan</h1><div class="section"><h2>Weekly Workout</h2>'+document.getElementById('workout-panel').innerHTML+'</div><div class="section"><h2>Diet Plan</h2>'+document.getElementById('diet-panel').innerHTML+'</div></body></html>');
+  win.document.close(); setTimeout(()=>win.print(),600);
 }
 </script>
 </body>
