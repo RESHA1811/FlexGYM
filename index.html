@@ -194,8 +194,56 @@ section.content{padding:5rem 2rem;max-width:1100px;margin:0 auto;}
 .skeleton-card::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0,rgba(255,255,255,.04) 50%,transparent 100%);animation:shimmer 1.4s infinite;}
 @keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
 
-/* HOW IT WORKS */
-.steps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.5rem;margin-top:2rem;}
+/* EXERCISE DEMO ANIMATIONS */
+.ex-demo-wrap{display:flex;gap:10px;margin-bottom:1.25rem;}
+.ex-demo,.ex-muscle{flex:1;background:var(--card2);border-radius:10px;padding:8px;text-align:center;}
+.ex-demo svg,.ex-muscle svg{width:100%;height:120px;}
+.demo-cap{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
+.fig{stroke:#9AA1A6;stroke-width:5;stroke-linecap:round;fill:none;}
+.fig-head{fill:#9AA1A6;stroke:none;}
+.eq{stroke:#555;stroke-width:6;stroke-linecap:round;}
+.mv{stroke:var(--lime);stroke-width:6;stroke-linecap:round;fill:none;}
+.mv-head{fill:var(--lime);stroke:none;}
+.wt{fill:var(--lime);}
+.body{fill:#2A2D31;stroke:#3A3D41;stroke-width:1;}
+.musc{fill:#2A2D31;}
+.musc.on{fill:var(--lime);}
+.mlbl{fill:var(--muted);font-family:'DM Sans',sans-serif;font-size:9px;text-anchor:middle;}
+@keyframes mvPressV{0%,100%{transform:translateY(12px);}50%{transform:translateY(-14px);}}
+@keyframes mvSquat{0%,100%{transform:translateY(0);}50%{transform:translateY(20px);}}
+@keyframes mvCurl{0%,100%{transform:rotate(0);}50%{transform:rotate(-105deg);}}
+@keyframes mvPull{0%,100%{transform:translateY(-14px);}50%{transform:translateY(12px);}}
+@keyframes mvRowBack{0%,100%{transform:translateX(0);}50%{transform:translateX(-18px);}}
+@keyframes mvLegExt{0%,100%{transform:rotate(62deg);}50%{transform:rotate(2deg);}}
+@keyframes mvLegCurl{0%,100%{transform:rotate(2deg);}50%{transform:rotate(72deg);}}
+@keyframes mvRunF{0%,100%{transform:rotate(28deg);}50%{transform:rotate(-28deg);}}
+@keyframes mvRunB{0%,100%{transform:rotate(-28deg);}50%{transform:rotate(28deg);}}
+@keyframes mvBreathe{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+@keyframes mvPedal{0%{transform:rotate(0);}100%{transform:rotate(360deg);}}
+.a-pressv{transform-box:fill-box;transform-origin:center;animation:mvPressV 2s ease-in-out infinite;}
+.a-squat{transform-box:fill-box;transform-origin:center;animation:mvSquat 2.2s ease-in-out infinite;}
+.a-curl{transform-box:fill-box;transform-origin:top center;animation:mvCurl 1.8s ease-in-out infinite;}
+.a-pull{transform-box:fill-box;transform-origin:center;animation:mvPull 2s ease-in-out infinite;}
+.a-rowback{transform-box:fill-box;transform-origin:center;animation:mvRowBack 1.9s ease-in-out infinite;}
+.a-legext{transform-box:fill-box;transform-origin:top center;animation:mvLegExt 1.9s ease-in-out infinite;}
+.a-legcurl{transform-box:fill-box;transform-origin:top center;animation:mvLegCurl 1.9s ease-in-out infinite;}
+.a-runf{transform-box:fill-box;transform-origin:top center;animation:mvRunF .5s ease-in-out infinite;}
+.a-runb{transform-box:fill-box;transform-origin:top center;animation:mvRunB .5s ease-in-out infinite;}
+.a-breathe{transform-box:fill-box;transform-origin:center;animation:mvBreathe 2.5s ease-in-out infinite;}
+.a-pedal{animation:mvPedal 1.2s linear infinite;}
+
+/* MEAL — clickable + detail panel */
+.meal-row{cursor:pointer;transition:background .15s;border-radius:6px;}
+.meal-row:hover{background:rgba(200,255,62,0.07);}
+.meal-arrow{margin-left:auto;color:var(--muted);font-size:.8rem;align-self:center;}
+.recipe-ing{display:flex;justify-content:space-between;gap:10px;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.88rem;color:#CCC;}
+.recipe-ing:last-child{border-bottom:none;}
+.recipe-ing .ing-amt{color:var(--muted);white-space:nowrap;}
+.nutri-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1.25rem;}
+.nutri-card{background:var(--card2);border-radius:8px;padding:.75rem;text-align:center;}
+.nutri-val{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;color:var(--lime);line-height:1;}
+.nutri-lbl{font-size:.68rem;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.04em;}
+
 .step-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.5rem;}
 .step-num{font-family:'Barlow Condensed',sans-serif;font-size:3rem;font-weight:800;color:rgba(200,255,62,.2);line-height:1;margin-bottom:.75rem;}
 .step-card h3{font-size:1rem;font-weight:600;margin-bottom:.5rem;}
@@ -392,6 +440,10 @@ footer a{color:var(--lime);text-decoration:none;}
     <button class="ex-close" onclick="closePanel()">✕</button>
   </div>
   <div class="ex-panel-body">
+    <div class="ex-demo-wrap">
+      <div class="ex-demo"><div id="ep-demo"></div><div class="demo-cap">Movement</div></div>
+      <div class="ex-muscle"><div id="ep-musclemap"></div><div class="demo-cap">Muscles Worked</div></div>
+    </div>
     <div class="ex-stat-row">
       <div class="ex-stat"><div class="ex-stat-val" id="ep-sets">—</div><div class="ex-stat-lbl">Sets</div></div>
       <div class="ex-stat"><div class="ex-stat-val" id="ep-reps">—</div><div class="ex-stat-lbl">Reps</div></div>
@@ -408,6 +460,34 @@ footer a{color:var(--lime);text-decoration:none;}
     <div class="ex-section">
       <div class="tip-box"><strong>✦ Pro Tip</strong><span id="ep-tip">—</span></div>
       <div class="mistake-box"><strong>⚠ Common Mistake</strong><span id="ep-mistake">—</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- MEAL DETAIL PANEL -->
+<div class="ex-panel-overlay" id="meal-overlay" onclick="closeMealPanel()"></div>
+<div class="ex-panel" id="meal-panel-fly">
+  <div class="ex-panel-head">
+    <div>
+      <div class="ex-panel-title" id="mp-name">Meal</div>
+      <div style="font-size:.8rem;color:var(--muted);margin-top:3px;" id="mp-type">—</div>
+    </div>
+    <button class="ex-close" onclick="closeMealPanel()">✕</button>
+  </div>
+  <div class="ex-panel-body">
+    <p id="mp-desc" style="color:#CCC;font-size:.92rem;margin-bottom:1.25rem;"></p>
+    <div class="nutri-row">
+      <div class="nutri-card"><div class="nutri-val" id="mp-cal">—</div><div class="nutri-lbl">Calories</div></div>
+      <div class="nutri-card"><div class="nutri-val" id="mp-protein">—</div><div class="nutri-lbl">Protein</div></div>
+      <div class="nutri-card"><div class="nutri-val" id="mp-fiber">—</div><div class="nutri-lbl">Fiber</div></div>
+    </div>
+    <div class="ex-section">
+      <div class="ex-section-title">Ingredients</div>
+      <div id="mp-ingredients"></div>
+    </div>
+    <div class="ex-section" id="mp-recipe-section">
+      <div class="ex-section-title">How To Make It</div>
+      <ol class="how-to-list" id="mp-recipe"></ol>
     </div>
   </div>
 </div>
@@ -436,7 +516,7 @@ footer a{color:var(--lime);text-decoration:none;}
    it ever gets abused, just regenerate it on the Groq site, or make
    your repository Private in GitHub settings.
    ══════════════════════════════════════════════════════════════════ */
-const GROQ_API_KEY = "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";   // ← paste your key here, e.g. "gsk_xxxxxxxx"
+const GROQ_API_KEY = "";   // ← paste your key here, e.g. "gsk_xxxxxxxx"
 /* ════════════════════════════════════════════════════════════════ */
 
 // ── STATE ──────────────────────────────────────────
@@ -602,6 +682,62 @@ function renderWorkoutGrid(data) {
 }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// ── EXERCISE VISUAL DEMOS (embedded SVG, zero API cost) ──────────────────────
+const EX_DEMOS = {
+  press_h:`<svg viewBox="0 0 200 150"><line class="eq" x1="35" y1="98" x2="150" y2="98"/><circle class="fig-head" cx="135" cy="88" r="10"/><line class="fig" x1="125" y1="92" x2="70" y2="92"/><g class="a-pressv"><line class="mv" x1="95" y1="92" x2="95" y2="55"/><line class="mv" x1="75" y1="55" x2="115" y2="55"/><rect class="wt" x="70" y="48" width="8" height="16" rx="2"/><rect class="wt" x="112" y="48" width="8" height="16" rx="2"/></g></svg>`,
+  press_v:`<svg viewBox="0 0 200 150"><circle class="fig-head" cx="100" cy="40" r="11"/><line class="fig" x1="100" y1="52" x2="100" y2="100"/><line class="fig" x1="100" y1="100" x2="82" y2="135"/><line class="fig" x1="100" y1="100" x2="118" y2="135"/><g class="a-pressv"><line class="mv" x1="100" y1="62" x2="78" y2="40"/><line class="mv" x1="100" y1="62" x2="122" y2="40"/><line class="mv" x1="74" y1="36" x2="126" y2="36"/></g></svg>`,
+  curl:`<svg viewBox="0 0 200 150"><circle class="fig-head" cx="100" cy="50" r="11"/><line class="fig" x1="100" y1="62" x2="100" y2="105"/><line class="fig" x1="100" y1="105" x2="85" y2="138"/><line class="fig" x1="100" y1="105" x2="115" y2="138"/><g class="a-curl"><line class="mv" x1="88" y1="72" x2="88" y2="105"/><rect class="wt" x="80" y="102" width="16" height="9" rx="2"/></g></svg>`,
+  pulldown:`<svg viewBox="0 0 200 150"><line class="eq" x1="100" y1="10" x2="100" y2="30"/><circle class="fig-head" cx="100" cy="62" r="11"/><line class="fig" x1="100" y1="74" x2="100" y2="115"/><line class="fig" x1="100" y1="115" x2="85" y2="142"/><line class="fig" x1="100" y1="115" x2="115" y2="142"/><g class="a-pull"><line class="mv" x1="100" y1="78" x2="80" y2="50"/><line class="mv" x1="100" y1="78" x2="120" y2="50"/><line class="mv" x1="74" y1="46" x2="126" y2="46"/></g></svg>`,
+  row:`<svg viewBox="0 0 200 150"><circle class="fig-head" cx="80" cy="55" r="11"/><line class="fig" x1="80" y1="67" x2="80" y2="110"/><line class="fig" x1="80" y1="110" x2="80" y2="140"/><line class="fig" x1="80" y1="110" x2="115" y2="140"/><g class="a-rowback"><line class="mv" x1="80" y1="80" x2="130" y2="80"/><rect class="wt" x="128" y="73" width="10" height="14" rx="2"/></g></svg>`,
+  squat:`<svg viewBox="0 0 200 150"><g class="a-squat"><circle class="mv-head" cx="100" cy="38" r="11"/><line class="mv" x1="100" y1="50" x2="100" y2="88"/></g><line class="fig" x1="100" y1="88" x2="78" y2="110"/><line class="fig" x1="78" y1="110" x2="80" y2="142"/><line class="fig" x1="100" y1="88" x2="122" y2="110"/><line class="fig" x1="122" y1="110" x2="120" y2="142"/></svg>`,
+  leg_ext:`<svg viewBox="0 0 200 150"><circle class="fig-head" cx="70" cy="55" r="11"/><line class="fig" x1="70" y1="67" x2="105" y2="95"/><line class="eq" x1="60" y1="95" x2="115" y2="95"/><g class="a-legext"><line class="mv" x1="108" y1="95" x2="108" y2="135"/><circle class="wt" cx="108" cy="138" r="7"/></g></svg>`,
+  leg_curl:`<svg viewBox="0 0 200 150"><circle class="fig-head" cx="60" cy="60" r="11"/><line class="eq" x1="55" y1="95" x2="120" y2="95"/><line class="fig" x1="65" y1="72" x2="110" y2="92"/><g class="a-legcurl"><line class="mv" x1="112" y1="95" x2="150" y2="95"/><circle class="wt" cx="152" cy="95" r="7"/></g></svg>`,
+  cardio_run:`<svg viewBox="0 0 200 150"><g class="a-breathe"><circle class="fig-head" cx="100" cy="45" r="11"/><line class="fig" x1="100" y1="57" x2="100" y2="95"/></g><g class="a-runf"><line class="mv" x1="100" y1="95" x2="118" y2="130"/></g><g class="a-runb"><line class="mv" x1="100" y1="95" x2="82" y2="130"/></g><line class="fig" x1="100" y1="68" x2="120" y2="80"/><line class="fig" x1="100" y1="68" x2="82" y2="82"/><line class="eq" x1="40" y1="140" x2="160" y2="140"/></svg>`,
+  cardio_cycle:`<svg viewBox="0 0 200 150"><circle class="fig-head" cx="95" cy="45" r="11"/><line class="fig" x1="95" y1="57" x2="100" y2="92"/><line class="fig" x1="95" y1="65" x2="120" y2="80"/><circle cx="110" cy="115" r="3" fill="#555"/><g class="a-pedal" style="transform-origin:110px 115px;"><line class="mv" x1="110" y1="115" x2="110" y2="135"/><circle class="wt" cx="110" cy="138" r="5"/></g><line class="fig" x1="100" y1="92" x2="110" y2="115"/></svg>`,
+  cardio_row:`<svg viewBox="0 0 200 150"><line class="eq" x1="30" y1="120" x2="170" y2="120"/><g class="a-rowback"><circle class="mv-head" cx="90" cy="70" r="11"/><line class="mv" x1="90" y1="82" x2="90" y2="105"/><line class="mv" x1="90" y1="88" x2="125" y2="95"/></g><line class="fig" x1="90" y1="105" x2="120" y2="115"/></svg>`,
+  core:`<svg viewBox="0 0 200 150"><g class="a-breathe"><circle class="mv-head" cx="60" cy="80" r="11"/><line class="mv" x1="70" y1="83" x2="140" y2="100"/></g><line class="fig" x1="140" y1="100" x2="155" y2="125"/><line class="fig" x1="72" y1="84" x2="78" y2="105"/><line class="eq" x1="40" y1="128" x2="165" y2="128"/></svg>`,
+  generic:`<svg viewBox="0 0 200 150"><g class="a-breathe"><circle class="fig-head" cx="100" cy="48" r="12"/><line class="fig" x1="100" y1="60" x2="100" y2="100"/><line class="fig" x1="100" y1="72" x2="78" y2="88"/><line class="fig" x1="100" y1="72" x2="122" y2="88"/><rect class="wt" x="70" y="84" width="14" height="9" rx="2"/><rect class="wt" x="116" y="84" width="14" height="9" rx="2"/></g><line class="fig" x1="100" y1="100" x2="86" y2="138"/><line class="fig" x1="100" y1="100" x2="114" y2="138"/></svg>`
+};
+function getMovementKey(name, equip) {
+  const n = ((name||'')+' '+(equip||'')).toLowerCase();
+  if (/rowing machine|\brower\b|erg machine/.test(n)) return 'cardio_row';
+  if (/cycl|spin|\bbike\b|recumbent|pedal/.test(n)) return 'cardio_cycle';
+  if (/tread|running|jog|sprint|\brun\b/.test(n)) return 'cardio_run';
+  if (/leg curl|hamstring curl/.test(n)) return 'leg_curl';
+  if (/leg extension|quad extension|knee extension/.test(n)) return 'leg_ext';
+  if (/lat pulldown|pulldown|pull-?down|pull-?up|chin-?up/.test(n)) return 'pulldown';
+  if (/\brow\b|seated row|cable row|bent.?over row/.test(n)) return 'row';
+  if (/shoulder press|overhead press|military|arnold/.test(n)) return 'press_v';
+  if (/bench press|chest press|incline press|push.?up|fly|pec/.test(n)) return 'press_h';
+  if (/curl|bicep/.test(n)) return 'curl';
+  if (/squat|leg press|lunge|deadlift|hip thrust|glute/.test(n)) return 'squat';
+  if (/plank|crunch|sit.?up|core|\babs\b|russian|leg raise|mountain/.test(n)) return 'core';
+  if (/tricep|pushdown/.test(n)) return 'press_v';
+  if (/extension|press/.test(n)) return 'press_v';
+  return 'generic';
+}
+function getExerciseDemoSVG(name, equip) { return EX_DEMOS[getMovementKey(name, equip)] || EX_DEMOS.generic; }
+
+function muscleMapSVG(muscles) {
+  const m=(muscles||'').toLowerCase();
+  const on=(...keys)=>keys.some(k=>m.includes(k))?'on':'';
+  return `<svg viewBox="0 0 220 175"><text x="60" y="12" class="mlbl">FRONT</text><text x="165" y="12" class="mlbl">BACK</text>
+  <g transform="translate(28,16)"><ellipse class="body" cx="32" cy="14" rx="9" ry="10"/><rect class="body" x="26" y="23" width="12" height="8" rx="3"/><path class="body" d="M14 32 Q32 28 50 32 L48 70 Q32 76 16 70 Z"/>
+  <circle class="musc ${on('shoulder','delt')}" cx="16" cy="36" r="6"/><circle class="musc ${on('shoulder','delt')}" cx="48" cy="36" r="6"/>
+  <ellipse class="musc ${on('chest','pec')}" cx="25" cy="42" rx="7" ry="6"/><ellipse class="musc ${on('chest','pec')}" cx="39" cy="42" rx="7" ry="6"/>
+  <rect class="musc ${on('ab','core','oblique')}" x="27" y="52" width="10" height="18" rx="2"/>
+  <ellipse class="musc ${on('bicep')}" cx="11" cy="50" rx="4" ry="9"/><ellipse class="musc ${on('bicep')}" cx="53" cy="50" rx="4" ry="9"/>
+  <ellipse class="musc ${on('quad','thigh')}" cx="25" cy="92" rx="6" ry="14"/><ellipse class="musc ${on('quad','thigh')}" cx="39" cy="92" rx="6" ry="14"/>
+  <ellipse class="musc ${on('calf','calves')}" cx="25" cy="120" rx="5" ry="12"/><ellipse class="musc ${on('calf','calves')}" cx="39" cy="120" rx="5" ry="12"/></g>
+  <g transform="translate(133,16)"><ellipse class="body" cx="32" cy="14" rx="9" ry="10"/><rect class="body" x="26" y="23" width="12" height="8" rx="3"/><path class="body" d="M14 32 Q32 28 50 32 L48 70 Q32 76 16 70 Z"/>
+  <circle class="musc ${on('shoulder','delt','trap')}" cx="16" cy="36" r="6"/><circle class="musc ${on('shoulder','delt','trap')}" cx="48" cy="36" r="6"/>
+  <path class="musc ${on('back','lat','trap','rhomboid')}" d="M18 34 Q32 38 46 34 L42 58 Q32 62 22 58 Z"/>
+  <ellipse class="musc ${on('tricep')}" cx="11" cy="50" rx="4" ry="9"/><ellipse class="musc ${on('tricep')}" cx="53" cy="50" rx="4" ry="9"/>
+  <ellipse class="musc ${on('glute')}" cx="26" cy="72" rx="6" ry="7"/><ellipse class="musc ${on('glute')}" cx="38" cy="72" rx="6" ry="7"/>
+  <ellipse class="musc ${on('hamstring','thigh')}" cx="25" cy="95" rx="6" ry="14"/><ellipse class="musc ${on('hamstring','thigh')}" cx="39" cy="95" rx="6" ry="14"/>
+  <ellipse class="musc ${on('calf','calves')}" cx="25" cy="122" rx="5" ry="12"/><ellipse class="musc ${on('calf','calves')}" cx="39" cy="122" rx="5" ry="12"/></g></svg>`;
+}
+
 // ── EXERCISE PANEL ──────────────────────────────────────────
 function openPanelByIndex(el) {
   const ex = window.ALL_EXERCISES[parseInt(el.dataset.ex)];
@@ -610,6 +746,8 @@ function openPanelByIndex(el) {
 function openPanel(ex) {
   document.getElementById('ep-name').textContent = ex.name || 'Exercise';
   document.getElementById('ep-equipment').textContent = ex.equipment || '—';
+  document.getElementById('ep-demo').innerHTML = getExerciseDemoSVG(ex.name, ex.equipment);
+  document.getElementById('ep-musclemap').innerHTML = muscleMapSVG(ex.muscles);
   document.getElementById('ep-sets').textContent = ex.sets!=null ? ex.sets : '—';
   document.getElementById('ep-reps').textContent = ex.reps || '—';
   document.getElementById('ep-rest').textContent = ex.rest || '—';
@@ -626,6 +764,42 @@ function openPanel(ex) {
 function closePanel() {
   document.getElementById('ex-overlay').classList.remove('open');
   document.getElementById('ex-panel').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── MEAL PANEL ──────────────────────────────────────────
+window.ALL_MEALS = [];
+function openMealByIndex(el) {
+  const meal = window.ALL_MEALS[parseInt(el.dataset.meal)];
+  if (meal) openMealPanel(meal);
+}
+function openMealPanel(meal) {
+  document.getElementById('mp-name').textContent = meal.name || 'Meal';
+  document.getElementById('mp-type').textContent = meal.type || '';
+  document.getElementById('mp-desc').textContent = meal.desc || '';
+  document.getElementById('mp-cal').textContent = meal.calories!=null ? meal.calories : '—';
+  document.getElementById('mp-protein').textContent = meal.protein || '—';
+  document.getElementById('mp-fiber').textContent = meal.fiber || '—';
+  const ings = meal.ingredients || [];
+  document.getElementById('mp-ingredients').innerHTML = (Array.isArray(ings)&&ings.length)
+    ? ings.map(it => {
+        if (typeof it === 'string') return `<div class="recipe-ing"><span>${esc(it)}</span></div>`;
+        return `<div class="recipe-ing"><span>${esc(it.item||it.name||'')}</span><span class="ing-amt">${esc(it.amount||it.qty||'')}</span></div>`;
+      }).join('')
+    : '<div class="recipe-ing"><span>Ingredients not available</span></div>';
+  const recipe = meal.recipe || meal.steps || meal.howTo || [];
+  const recSec = document.getElementById('mp-recipe-section');
+  if (Array.isArray(recipe) && recipe.length) {
+    document.getElementById('mp-recipe').innerHTML = recipe.map(s=>`<li>${esc(s)}</li>`).join('');
+    recSec.style.display = '';
+  } else { recSec.style.display = 'none'; }
+  document.getElementById('meal-overlay').classList.add('open');
+  document.getElementById('meal-panel-fly').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMealPanel() {
+  document.getElementById('meal-overlay').classList.remove('open');
+  document.getElementById('meal-panel-fly').classList.remove('open');
   document.body.style.overflow = '';
 }
 
@@ -648,6 +822,7 @@ function renderDietGrid(data) {
     html += '</div>';
   }
   html += '<div class="diet-week-grid">';
+  window.ALL_MEALS = [];
   plan.forEach(day => {
     const meals = [
       {type:'Breakfast',data:day.breakfast},
@@ -658,7 +833,9 @@ function renderDietGrid(data) {
     const totalCal = meals.reduce((s,x)=>s+(parseInt(x.data.calories)||0),0);
     html += `<div class="diet-day-card"><div class="diet-day-head"><div class="diet-day-name">${esc(day.day||'Day')}</div>${totalCal?`<div class="diet-day-cal">~${totalCal} kcal</div>`:''}</div><div class="meal-list">`;
     meals.forEach(x=>{
-      html += `<div class="meal-row"><div class="meal-type">${x.type}</div><div class="meal-info"><div class="meal-name">${esc(x.data.name||'—')}</div><div class="meal-desc">${esc(x.data.desc||'')}</div>${x.data.calories?`<div class="meal-cal">${esc(x.data.calories)} kcal</div>`:''}</div></div>`;
+      const mealObj = Object.assign({type:x.type}, x.data);
+      const idx = window.ALL_MEALS.push(mealObj) - 1;
+      html += `<div class="meal-row" data-meal="${idx}" onclick="openMealByIndex(this)"><div class="meal-type">${x.type}</div><div class="meal-info"><div class="meal-name">${esc(x.data.name||'—')}</div><div class="meal-desc">${esc(x.data.desc||'')}</div>${x.data.calories?`<div class="meal-cal">${esc(x.data.calories)} kcal${x.data.protein?' · '+esc(x.data.protein)+' protein':''}</div>`:''}</div><div class="meal-arrow">›</div></div>`;
     });
     html += '</div></div>';
   });
@@ -668,6 +845,7 @@ function renderDietGrid(data) {
     data.tips.forEach(t=>{ html += `<div class="tip-item">${esc(t)}</div>`; });
     html += '</div>';
   }
+  html += '<p style="font-size:.8rem;color:var(--muted);margin-top:.75rem;">👆 Click any meal to see the full recipe, ingredients &amp; nutrition</p>';
   panel.innerHTML = html;
 }
 
@@ -783,13 +961,13 @@ Output a JSON object with this exact shape:
 {"weeklySchedule":[{"day":"Monday","label":"Upper Body Strength","restDay":false,"exercises":[{"name":"...","sets":3,"reps":"10-12","rest":"60s","equipment":"...","muscles":"Primary, Secondary","howTo":["step 1","step 2","step 3"],"tip":"one tip","mistake":"one mistake"}]}],"notes":"short weekly note"}
 Rules: 4-5 exercises per training day. howTo = exactly 3 short steps. rest days have "restDay":true and "exercises":[]. Keep all text concise.`;
 
-  const dietPrompt = `Create a 7-day ${dietChoice} meal plan.
+  const dietPrompt = `Create a 7-day ${dietChoice} meal plan with full recipes.
 Profile: Age ${age}, ${gender||''}, ${height}cm, ${weight}kg, BMI ${bmi}, Goals: ${goals.join(', ')}.
 ${dietChoice==='non-vegetarian'?'Include lean proteins: chicken, eggs, fish, turkey.':'Strictly vegetarian: tofu, paneer, legumes, dairy OK. No meat/fish/egg.'}
 Base meals on healthy grain bowls and whole foods.
 Output a JSON object with this exact shape:
-{"calories":1800,"macros":{"protein":"150g","carbs":"180g","fat":"55g"},"mealPlan":[{"day":"Monday","breakfast":{"name":"...","desc":"short","calories":420},"snack":{"name":"...","desc":"short","calories":180},"lunch":{"name":"...","desc":"short","calories":550},"dinner":{"name":"...","desc":"short","calories":520}}],"tips":["tip 1","tip 2","tip 3"]}
-Include all 7 days. Keep descriptions under 8 words.`;
+{"calories":1800,"macros":{"protein":"150g","carbs":"180g","fat":"55g"},"mealPlan":[{"day":"Monday","breakfast":{"name":"...","desc":"short","calories":420,"protein":"25g","fiber":"8g","ingredients":[{"item":"Rolled oats","amount":"50g"},{"item":"Greek yogurt","amount":"100g"}],"recipe":["step 1","step 2","step 3"]},"lunch":{"name":"...","desc":"short","calories":550,"protein":"35g","fiber":"10g","ingredients":[{"item":"...","amount":"..."}],"recipe":["step 1","step 2"]},"dinner":{"name":"...","desc":"short","calories":520,"protein":"30g","fiber":"9g","ingredients":[{"item":"...","amount":"..."}],"recipe":["step 1","step 2"]}}],"tips":["tip 1","tip 2","tip 3"]}
+Rules: include all 7 days. Each meal needs calories, protein, fiber, 4-6 ingredients with amounts, and 3 short recipe steps. Skip the mid-morning snack to save space. Keep all text concise.`;
 
   try {
     const workoutRaw = await callGroqSmart(workoutPrompt, 4500, 'workout-panel');
@@ -800,7 +978,7 @@ Include all 7 days. Keep descriptions under 8 words.`;
     document.getElementById('diet-panel').innerHTML='<p style="color:var(--muted);font-size:.9rem;">Generating your meal plan...</p>';
     await new Promise(r => setTimeout(r, 2000));
 
-    const dietRaw = await callGroqSmart(dietPrompt, 3000, 'diet-panel');
+    const dietRaw = await callGroqSmart(dietPrompt, 4500, 'diet-panel');
     const dietData = extractJSON(dietRaw);
     renderDietGrid(dietData);
   } catch(err) {
