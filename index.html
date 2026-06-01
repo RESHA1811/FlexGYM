@@ -236,6 +236,21 @@ section.content{padding:5rem 2rem;max-width:1100px;margin:0 auto;}
 .meal-row{cursor:pointer;transition:background .15s;border-radius:6px;}
 .meal-row:hover{background:rgba(200,255,62,0.07);}
 .meal-arrow{margin-left:auto;color:var(--muted);font-size:.8rem;align-self:center;}
+/* INJURY INPUT */
+.injury-box{background:rgba(255,75,75,.05);border:1px solid rgba(255,75,75,.2);border-radius:10px;padding:1rem 1.25rem;margin-top:1.5rem;}
+.injury-box label{font-size:.78rem;font-weight:600;color:#FF8888;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:6px;margin-bottom:.6rem;}
+.injury-box textarea{background:var(--dark);border:1px solid rgba(255,75,75,.25);color:var(--text);padding:.7rem 1rem;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;width:100%;resize:vertical;line-height:1.5;min-height:72px;transition:border-color .2s;}
+.injury-box textarea:focus{border-color:rgba(255,75,75,.6);}
+.injury-box .hint{font-size:.78rem;color:var(--muted);margin-top:5px;}
+/* WARMUP / COOLDOWN CHIPS */
+.phase-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:4px;margin-bottom:5px;display:inline-block;}
+.phase-label.warmup{background:rgba(75,159,255,.15);color:#7CC2FF;}
+.phase-label.cooldown{background:rgba(184,122,255,.15);color:#B87AFF;}
+.phase-chip{display:flex;align-items:center;gap:6px;padding:.38rem .65rem;border-radius:6px;margin-bottom:3px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);}
+.phase-chip .ph-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.phase-chip .ph-name{font-size:.75rem;color:#BBB;}
+.phase-chip .ph-dur{font-size:.68rem;color:var(--muted);margin-left:auto;}
+.phase-divider{border:none;border-top:1px dashed rgba(255,255,255,.07);margin:.5rem 0;}
 .recipe-ing{display:flex;justify-content:space-between;gap:10px;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.88rem;color:#CCC;}
 .recipe-ing:last-child{border-bottom:none;}
 .recipe-ing .ing-amt{color:var(--muted);white-space:nowrap;}
@@ -404,6 +419,12 @@ footer a{color:var(--lime);text-decoration:none;}
       <div style="font-size:.8rem;color:var(--muted);margin-top:6px;" id="diet-note">Meal plans based on 30 healthy bowl recipes — wholesome plant-based, global grain bowls, high-protein options.</div>
     </div>
 
+    <div class="injury-box">
+      <label><span style="font-size:1.1rem;">⚕️</span> Previous Injuries / Physical Limitations <span style="font-weight:400;text-transform:none;font-size:.78rem;color:var(--muted);">(optional but important)</span></label>
+      <textarea id="injuries" placeholder="e.g. ACL surgery on right knee — right knee is weaker. Lower back strain. Shoulder impingement on left side.&#10;&#10;The AI will avoid exercises that put excessive pressure on injured areas and suggest safer alternatives."></textarea>
+      <div class="hint">🛡️ Your plan will be modified to protect injured areas. Be as specific as possible.</div>
+    </div>
+
     <div class="error-msg" id="error-msg"></div>
     <button class="generate-btn" onclick="generatePlan()" id="gen-btn">
       <div class="spinner" id="btn-spinner"></div>
@@ -496,7 +517,7 @@ footer a{color:var(--lime);text-decoration:none;}
   <p style="margin-bottom:8px;"><strong style="color:var(--text);">GymGenius</strong> — Open Source Fitness Planner · FlexOne Tower</p>
   <p>Built with ❤️ · <a href="https://github.com" target="_blank">GitHub Repository</a> · Powered by Llama 3 (Groq)</p>
   <p style="margin-top:8px;font-size:.78rem;">⚠️ Consult a healthcare professional before starting any exercise program.</p>
-  <p style="margin-top:10px;"><span style="display:inline-block;background:var(--lime);color:#000;font-size:.7rem;font-weight:700;padding:3px 12px;border-radius:100px;letter-spacing:.05em;">VERSION 2.0 — GOALS FIXED ✓</span></p>
+  <p style="margin-top:10px;"><span style="display:inline-block;background:var(--lime);color:#000;font-size:.7rem;font-weight:700;padding:3px 12px;border-radius:100px;letter-spacing:.05em;">VERSION 3.0 — INJURY + RECIPE + FORM GUIDE ✓</span></p>
 </footer>
 
 <script>
@@ -516,7 +537,7 @@ footer a{color:var(--lime);text-decoration:none;}
    it ever gets abused, just regenerate it on the Groq site, or make
    your repository Private in GitHub settings.
    ══════════════════════════════════════════════════════════════════ */
-const GROQ_API_KEY = "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";   // ← paste your key here, e.g. "gsk_xxxxxxxx"
+const GROQ_API_KEY = "";   // ← paste your key here, e.g. "gsk_xxxxxxxx"
 /* ════════════════════════════════════════════════════════════════ */
 
 // ── STATE ──────────────────────────────────────────
@@ -659,44 +680,58 @@ function renderWorkoutGrid(data) {
   sched.forEach(day => {
     const theme = getDayTheme(day.label || day.focus || '');
     const exs = day.exercises || [];
+    const warmup = day.warmup || [];
+    const cooldown = day.cooldown || [];
     html += `<div class="day-card"><div class="day-header" style="border-left:3px solid ${theme.color};">
       <div class="day-name" style="color:${theme.color};">${esc(day.day||'Day')}</div>
       <div class="day-focus">${esc(day.label||day.focus||'')}</div>
       <span class="day-badge" style="background:${theme.bg};color:${theme.color};">${theme.label}</span></div>`;
     if (day.restDay || exs.length === 0) {
-      html += `<div class="day-rest"><span class="day-rest-icon">🛌</span>Rest &amp; Recovery<br><span style="font-size:.75rem;">Foam roll, light stretch</span></div>`;
+      html += `<div class="day-rest"><span class="day-rest-icon">🛌</span>Rest &amp; Recovery<br><span style="font-size:.75rem;">Foam roll 10 min · Light stretch</span></div>`;
     } else {
       html += '<div class="day-body">';
+      // Warmup
+      if (warmup.length) {
+        html += '<span class="phase-label warmup">🔥 Warm-Up</span>';
+        warmup.forEach(w => { html += `<div class="phase-chip"><div class="ph-dot" style="background:#7CC2FF;"></div><div class="ph-name">${esc(w.name||w)}</div><div class="ph-dur">${esc(w.duration||w.time||'')}</div></div>`; });
+        html += '<hr class="phase-divider">';
+      }
+      // Main exercises
       exs.forEach(ex => {
         const idx = window.ALL_EXERCISES.push(ex) - 1;
         html += `<div class="exercise-chip" data-ex="${idx}" onclick="openPanelByIndex(this)">
           <div class="ex-dot" style="background:${theme.color};"></div>
           <div><div class="ex-name">${esc(ex.name||'Exercise')}</div><div class="ex-meta">${esc(ex.sets||'')}×${esc(ex.reps||'')} · ${esc(ex.rest||'')}</div></div></div>`;
       });
+      // Cooldown
+      if (cooldown.length) {
+        html += '<hr class="phase-divider"><span class="phase-label cooldown">❄️ Cool-Down</span>';
+        cooldown.forEach(c => { html += `<div class="phase-chip"><div class="ph-dot" style="background:#B87AFF;"></div><div class="ph-name">${esc(c.name||c)}</div><div class="ph-dur">${esc(c.duration||c.time||'')}</div></div>`; });
+      }
       html += '</div>';
     }
     html += '</div>';
   });
-  html += '</div><p style="font-size:.8rem;color:var(--muted);margin-top:.5rem;">👆 Click any exercise to see step-by-step form guide</p>';
+  html += '</div><p style="font-size:.8rem;color:var(--muted);margin-top:.5rem;">👆 Click any exercise for animated form guide &amp; equipment details</p>';
   panel.innerHTML = html;
 }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ── EXERCISE VISUAL DEMOS (embedded SVG, zero API cost) ──────────────────────
 const EX_DEMOS = {
-  press_h:`<svg viewBox="0 0 200 150"><line class="eq" x1="35" y1="98" x2="150" y2="98"/><circle class="fig-head" cx="135" cy="88" r="10"/><line class="fig" x1="125" y1="92" x2="70" y2="92"/><g class="a-pressv"><line class="mv" x1="95" y1="92" x2="95" y2="55"/><line class="mv" x1="75" y1="55" x2="115" y2="55"/><rect class="wt" x="70" y="48" width="8" height="16" rx="2"/><rect class="wt" x="112" y="48" width="8" height="16" rx="2"/></g></svg>`,
-  press_v:`<svg viewBox="0 0 200 150"><circle class="fig-head" cx="100" cy="40" r="11"/><line class="fig" x1="100" y1="52" x2="100" y2="100"/><line class="fig" x1="100" y1="100" x2="82" y2="135"/><line class="fig" x1="100" y1="100" x2="118" y2="135"/><g class="a-pressv"><line class="mv" x1="100" y1="62" x2="78" y2="40"/><line class="mv" x1="100" y1="62" x2="122" y2="40"/><line class="mv" x1="74" y1="36" x2="126" y2="36"/></g></svg>`,
-  curl:`<svg viewBox="0 0 200 150"><circle class="fig-head" cx="100" cy="50" r="11"/><line class="fig" x1="100" y1="62" x2="100" y2="105"/><line class="fig" x1="100" y1="105" x2="85" y2="138"/><line class="fig" x1="100" y1="105" x2="115" y2="138"/><g class="a-curl"><line class="mv" x1="88" y1="72" x2="88" y2="105"/><rect class="wt" x="80" y="102" width="16" height="9" rx="2"/></g></svg>`,
-  pulldown:`<svg viewBox="0 0 200 150"><line class="eq" x1="100" y1="10" x2="100" y2="30"/><circle class="fig-head" cx="100" cy="62" r="11"/><line class="fig" x1="100" y1="74" x2="100" y2="115"/><line class="fig" x1="100" y1="115" x2="85" y2="142"/><line class="fig" x1="100" y1="115" x2="115" y2="142"/><g class="a-pull"><line class="mv" x1="100" y1="78" x2="80" y2="50"/><line class="mv" x1="100" y1="78" x2="120" y2="50"/><line class="mv" x1="74" y1="46" x2="126" y2="46"/></g></svg>`,
-  row:`<svg viewBox="0 0 200 150"><circle class="fig-head" cx="80" cy="55" r="11"/><line class="fig" x1="80" y1="67" x2="80" y2="110"/><line class="fig" x1="80" y1="110" x2="80" y2="140"/><line class="fig" x1="80" y1="110" x2="115" y2="140"/><g class="a-rowback"><line class="mv" x1="80" y1="80" x2="130" y2="80"/><rect class="wt" x="128" y="73" width="10" height="14" rx="2"/></g></svg>`,
-  squat:`<svg viewBox="0 0 200 150"><g class="a-squat"><circle class="mv-head" cx="100" cy="38" r="11"/><line class="mv" x1="100" y1="50" x2="100" y2="88"/></g><line class="fig" x1="100" y1="88" x2="78" y2="110"/><line class="fig" x1="78" y1="110" x2="80" y2="142"/><line class="fig" x1="100" y1="88" x2="122" y2="110"/><line class="fig" x1="122" y1="110" x2="120" y2="142"/></svg>`,
-  leg_ext:`<svg viewBox="0 0 200 150"><circle class="fig-head" cx="70" cy="55" r="11"/><line class="fig" x1="70" y1="67" x2="105" y2="95"/><line class="eq" x1="60" y1="95" x2="115" y2="95"/><g class="a-legext"><line class="mv" x1="108" y1="95" x2="108" y2="135"/><circle class="wt" cx="108" cy="138" r="7"/></g></svg>`,
-  leg_curl:`<svg viewBox="0 0 200 150"><circle class="fig-head" cx="60" cy="60" r="11"/><line class="eq" x1="55" y1="95" x2="120" y2="95"/><line class="fig" x1="65" y1="72" x2="110" y2="92"/><g class="a-legcurl"><line class="mv" x1="112" y1="95" x2="150" y2="95"/><circle class="wt" cx="152" cy="95" r="7"/></g></svg>`,
-  cardio_run:`<svg viewBox="0 0 200 150"><g class="a-breathe"><circle class="fig-head" cx="100" cy="45" r="11"/><line class="fig" x1="100" y1="57" x2="100" y2="95"/></g><g class="a-runf"><line class="mv" x1="100" y1="95" x2="118" y2="130"/></g><g class="a-runb"><line class="mv" x1="100" y1="95" x2="82" y2="130"/></g><line class="fig" x1="100" y1="68" x2="120" y2="80"/><line class="fig" x1="100" y1="68" x2="82" y2="82"/><line class="eq" x1="40" y1="140" x2="160" y2="140"/></svg>`,
-  cardio_cycle:`<svg viewBox="0 0 200 150"><circle class="fig-head" cx="95" cy="45" r="11"/><line class="fig" x1="95" y1="57" x2="100" y2="92"/><line class="fig" x1="95" y1="65" x2="120" y2="80"/><circle cx="110" cy="115" r="3" fill="#555"/><g class="a-pedal" style="transform-origin:110px 115px;"><line class="mv" x1="110" y1="115" x2="110" y2="135"/><circle class="wt" cx="110" cy="138" r="5"/></g><line class="fig" x1="100" y1="92" x2="110" y2="115"/></svg>`,
-  cardio_row:`<svg viewBox="0 0 200 150"><line class="eq" x1="30" y1="120" x2="170" y2="120"/><g class="a-rowback"><circle class="mv-head" cx="90" cy="70" r="11"/><line class="mv" x1="90" y1="82" x2="90" y2="105"/><line class="mv" x1="90" y1="88" x2="125" y2="95"/></g><line class="fig" x1="90" y1="105" x2="120" y2="115"/></svg>`,
-  core:`<svg viewBox="0 0 200 150"><g class="a-breathe"><circle class="mv-head" cx="60" cy="80" r="11"/><line class="mv" x1="70" y1="83" x2="140" y2="100"/></g><line class="fig" x1="140" y1="100" x2="155" y2="125"/><line class="fig" x1="72" y1="84" x2="78" y2="105"/><line class="eq" x1="40" y1="128" x2="165" y2="128"/></svg>`,
-  generic:`<svg viewBox="0 0 200 150"><g class="a-breathe"><circle class="fig-head" cx="100" cy="48" r="12"/><line class="fig" x1="100" y1="60" x2="100" y2="100"/><line class="fig" x1="100" y1="72" x2="78" y2="88"/><line class="fig" x1="100" y1="72" x2="122" y2="88"/><rect class="wt" x="70" y="84" width="14" height="9" rx="2"/><rect class="wt" x="116" y="84" width="14" height="9" rx="2"/></g><line class="fig" x1="100" y1="100" x2="86" y2="138"/><line class="fig" x1="100" y1="100" x2="114" y2="138"/></svg>`
+  press_h:`<svg viewBox="0 0 240 165"><text x="120" y="160" class="mlbl">Bench + Dumbbells</text><rect fill="#2D3748" rx="5" x="45" y="103" width="155" height="14"/><line class="eq" x1="68" y1="117" x2="60" y2="138"/><line class="eq" x1="178" y1="117" x2="186" y2="138"/><circle class="fig-head" cx="207" cy="90" r="13"/><line class="fig" stroke-width="9" x1="72" y1="97" x2="195" y2="97"/><line class="fig" stroke-width="7" x1="72" y1="97" x2="52" y2="130"/><line class="fig" stroke-width="7" x1="64" y1="97" x2="44" y2="130"/><g opacity="0.2"><line stroke="#C8FF3E" stroke-width="6" stroke-linecap="round" x1="140" y1="97" x2="140" y2="78"/><line stroke="#C8FF3E" stroke-width="6" stroke-linecap="round" x1="118" y1="78" x2="162" y2="78"/></g><g class="a-pressv"><line class="mv" stroke-width="8" x1="140" y1="97" x2="140" y2="50"/><line class="mv" stroke-width="8" x1="114" y1="50" x2="166" y2="50"/><rect class="wt" x="107" y="38" rx="4" width="13" height="22"/><rect class="wt" x="161" y="38" rx="4" width="13" height="22"/></g></svg>`,
+  press_v:`<svg viewBox="0 0 240 165"><text x="120" y="160" class="mlbl">Dumbbells</text><circle class="fig-head" cx="120" cy="32" r="13"/><line class="fig" stroke-width="9" x1="120" y1="45" x2="120" y2="105"/><line class="fig" stroke-width="7" x1="120" y1="105" x2="100" y2="148"/><line class="fig" stroke-width="7" x1="120" y1="105" x2="140" y2="148"/><g opacity="0.2"><line stroke="#C8FF3E" stroke-width="6" stroke-linecap="round" x1="120" y1="60" x2="88" y2="65"/><line stroke="#C8FF3E" stroke-width="6" stroke-linecap="round" x1="120" y1="60" x2="152" y2="65"/></g><g class="a-pressv"><line class="mv" stroke-width="8" x1="120" y1="62" x2="90" y2="34"/><line class="mv" stroke-width="8" x1="120" y1="62" x2="150" y2="34"/><line class="mv" stroke-width="8" x1="80" y1="31" x2="160" y2="31"/><rect class="wt" x="72" y="22" rx="3" width="12" height="19"/><rect class="wt" x="157" y="22" rx="3" width="12" height="19"/></g></svg>`,
+  curl:`<svg viewBox="0 0 240 165"><text x="120" y="160" class="mlbl">Dumbbells</text><circle class="fig-head" cx="120" cy="32" r="13"/><line class="fig" stroke-width="9" x1="120" y1="45" x2="120" y2="105"/><line class="fig" stroke-width="7" x1="120" y1="105" x2="100" y2="148"/><line class="fig" stroke-width="7" x1="120" y1="105" x2="140" y2="148"/><line class="fig" stroke-width="7" x1="120" y1="68" x2="147" y2="90"/><rect fill="#9AA1A6" x="144" y="86" rx="3" width="12" height="20"/><g opacity="0.2"><line stroke="#C8FF3E" stroke-width="6" stroke-linecap="round" x1="97" y1="68" x2="90" y2="110"/></g><g class="a-curl" style="transform-origin:97px 68px;"><line class="mv" stroke-width="8" x1="97" y1="68" x2="87" y2="108"/><rect class="wt" x="79" y="104" rx="4" width="13" height="22"/></g></svg>`,
+  pulldown:`<svg viewBox="0 0 240 165"><text x="120" y="162" class="mlbl">Lat Pulldown Machine</text><line stroke="#3A4048" stroke-width="9" stroke-linecap="round" x1="38" y1="14" x2="202" y2="14"/><line stroke="#3A4048" stroke-width="4" x1="120" y1="14" x2="120" y2="35"/><rect fill="#2D3748" rx="3" x="102" y="120" width="36" height="9"/><circle class="fig-head" cx="120" cy="68" r="13"/><line class="fig" stroke-width="9" x1="120" y1="82" x2="120" y2="120"/><line class="fig" stroke-width="7" x1="120" y1="120" x2="100" y2="150"/><line class="fig" stroke-width="7" x1="120" y1="120" x2="140" y2="150"/><line class="fig" stroke-width="7" x1="120" y1="90" x2="92" y2="65"/><line class="fig" stroke-width="7" x1="120" y1="90" x2="148" y2="65"/><g class="a-pull"><line class="mv" stroke-width="9" x1="74" y1="35" x2="166" y2="35"/><line class="mv" stroke-width="5" x1="74" y1="35" x2="72" y2="52"/><line class="mv" stroke-width="5" x1="166" y1="35" x2="168" y2="52"/></g></svg>`,
+  row:`<svg viewBox="0 0 240 165"><text x="120" y="160" class="mlbl">Cable / Seated Row Machine</text><rect fill="#2D3748" rx="3" x="16" y="72" width="22" height="68"/><circle fill="#555" cx="27" cy="92" r="7"/><line stroke="#2D3748" stroke-width="4" x1="20" y1="140" x2="220" y2="140"/><circle class="fig-head" cx="145" cy="70" r="13"/><line class="fig" stroke-width="9" x1="145" y1="83" x2="145" y2="130"/><line class="fig" stroke-width="7" x1="145" y1="130" x2="100" y2="140"/><line class="fig" stroke-width="7" x1="145" y1="130" x2="175" y2="140"/><g class="a-rowback"><line class="mv" stroke-width="8" x1="38" y1="92" x2="112" y2="92"/><rect class="wt" x="110" y="85" rx="3" width="13" height="14"/><line class="mv" stroke-width="7" x1="145" y1="95" x2="112" y2="94"/></g></svg>`,
+  squat:`<svg viewBox="0 0 240 165"><text x="120" y="160" class="mlbl">Bodyweight / Dumbbells</text><line stroke="#2D3748" stroke-width="4" x1="60" y1="148" x2="180" y2="148"/><g opacity="0.2"><circle fill="#9AA1A6" cx="120" cy="28" r="13"/><line stroke="#9AA1A6" stroke-width="8" stroke-linecap="round" x1="120" y1="41" x2="120" y2="98"/><line stroke="#9AA1A6" stroke-width="6" stroke-linecap="round" x1="120" y1="98" x2="100" y2="148"/><line stroke="#9AA1A6" stroke-width="6" stroke-linecap="round" x1="120" y1="98" x2="140" y2="148"/></g><g class="a-squat"><circle class="mv-head" cx="120" cy="32" r="13"/><line class="mv" stroke-width="9" x1="120" y1="45" x2="120" y2="90"/><line class="mv" stroke-width="7" x1="120" y1="68" x2="95" y2="80"/><line class="mv" stroke-width="7" x1="120" y1="68" x2="145" y2="80"/></g><line class="fig" stroke-width="7" x1="120" y1="90" x2="98" y2="116"/><line class="fig" stroke-width="7" x1="98" y1="116" x2="100" y2="148"/><line class="fig" stroke-width="7" x1="120" y1="90" x2="142" y2="116"/><line class="fig" stroke-width="7" x1="142" y1="116" x2="140" y2="148"/></svg>`,
+  leg_ext:`<svg viewBox="0 0 240 165"><text x="120" y="162" class="mlbl">Leg Extension Machine</text><rect fill="#2D3748" rx="5" x="138" y="66" width="14" height="62"/><rect fill="#2D3748" rx="5" x="85" y="116" width="82" height="11"/><circle class="fig-head" cx="150" cy="52" r="13"/><line class="fig" stroke-width="9" x1="150" y1="65" x2="150" y2="116"/><line class="fig" stroke-width="8" x1="100" y1="117" x2="150" y2="117"/><line class="fig" stroke-width="6" x1="150" y1="82" x2="170" y2="100"/><line class="fig" stroke-width="6" x1="150" y1="82" x2="128" y2="98"/><g opacity="0.2"><line stroke="#C8FF3E" stroke-width="7" stroke-linecap="round" x1="100" y1="117" x2="78" y2="148"/></g><g class="a-legext" style="transform-origin:100px 117px;"><line class="mv" stroke-width="9" x1="100" y1="117" x2="63" y2="120"/><rect class="wt" x="52" y="113" rx="4" width="16" height="13"/></g></svg>`,
+  leg_curl:`<svg viewBox="0 0 240 165"><text x="120" y="162" class="mlbl">Leg Curl Machine</text><rect fill="#2D3748" rx="5" x="50" y="100" width="145" height="13"/><line class="eq" x1="75" y1="113" x2="68" y2="138"/><line class="eq" x1="170" y1="113" x2="177" y2="138"/><circle class="fig-head" cx="55" cy="87" r="13"/><line class="fig" stroke-width="9" x1="65" y1="94" x2="170" y2="94"/><g opacity="0.2"><line stroke="#C8FF3E" stroke-width="7" stroke-linecap="round" x1="170" y1="94" x2="198" y2="94"/></g><g class="a-legcurl" style="transform-origin:170px 94px;"><line class="mv" stroke-width="9" x1="170" y1="94" x2="188" y2="58"/><rect class="wt" x="184" y="48" rx="4" width="12" height="16"/></g></svg>`,
+  cardio_run:`<svg viewBox="0 0 240 165"><text x="120" y="162" class="mlbl">Life Fitness Treadmill</text><rect fill="#2D3748" rx="6" x="32" y="128" width="175" height="16"/><line class="eq" x1="45" y1="128" x2="33" y2="108"/><line class="eq" x1="197" y1="128" x2="207" y2="108"/><line class="eq" x1="33" y1="108" x2="207" y2="108"/><line stroke="#555" stroke-width="1" x1="70" y1="129" x2="88" y2="144"/><line stroke="#555" stroke-width="1" x1="115" y1="129" x2="133" y2="144"/><line stroke="#555" stroke-width="1" x1="160" y1="129" x2="178" y2="144"/><g class="a-breathe"><circle class="fig-head" cx="120" cy="42" r="13"/><line class="fig" stroke-width="9" x1="120" y1="55" x2="118" y2="108"/></g><g class="a-runf"><line class="mv" stroke-width="7" x1="120" y1="70" x2="98" y2="86"/></g><line class="fig" stroke-width="6" x1="119" y1="70" x2="143" y2="88"/><g class="a-runf" style="animation-delay:-.28s"><line class="mv" stroke-width="8" x1="118" y1="108" x2="136" y2="132"/></g><g class="a-runb" style="animation-delay:-.28s"><line class="mv" stroke-width="8" x1="118" y1="108" x2="100" y2="132"/></g></svg>`,
+  cardio_cycle:`<svg viewBox="0 0 240 165"><text x="120" y="162" class="mlbl">ICG Spin Bike</text><circle fill="none" stroke="#3A4048" stroke-width="9" cx="85" cy="130" r="30"/><circle fill="#2D3748" cx="85" cy="130" r="6"/><line class="eq" x1="85" y1="130" x2="145" y2="95"/><line class="eq" x1="145" y1="95" x2="155" y2="63"/><line stroke="#3A4048" stroke-width="9" stroke-linecap="round" x1="148" y1="68" x2="180" y2="58"/><rect fill="#2D3748" rx="3" x="132" y="91" width="28" height="9"/><circle class="fig-head" cx="172" cy="44" r="13"/><line class="fig" stroke-width="8" x1="172" y1="57" x2="160" y2="98"/><line class="fig" stroke-width="6" x1="170" y1="66" x2="160" y2="64"/><line class="fig" stroke-width="7" x1="160" y1="98" x2="120" y2="112"/><g class="a-pedal" style="transform-origin:112px 112px;"><line class="mv" stroke-width="8" x1="112" y1="112" x2="112" y2="135"/><rect class="wt" x="105" y="133" rx="3" width="14" height="8"/></g></svg>`,
+  cardio_row:`<svg viewBox="0 0 240 165"><text x="120" y="162" class="mlbl">HiRower Machine</text><rect fill="#2D3748" rx="4" x="28" y="118" width="184" height="9"/><circle fill="#2D3748" stroke="#4A5568" stroke-width="4" cx="48" cy="107" r="20"/><circle fill="#555" cx="48" cy="107" r="6"/><rect fill="#2D3748" rx="3" x="78" y="100" width="18" height="11"/><g class="a-rowback"><circle class="mv-head" cx="170" cy="80" r="13"/><line class="mv" stroke-width="8" x1="170" y1="93" x2="162" y2="118"/><line class="mv" stroke-width="6" x1="168" y1="92" x2="68" y2="108"/><rect class="wt" x="58" y="102" rx="3" width="12" height="12"/></g><line class="fig" stroke-width="8" x1="162" y1="118" x2="118" y2="118"/><line class="fig" stroke-width="8" x1="118" y1="118" x2="88" y2="105"/></svg>`,
+  core:`<svg viewBox="0 0 240 165"><text x="120" y="162" class="mlbl">Yoga Mat / Core</text><rect fill="#2D3748" rx="4" x="28" y="126" width="184" height="9"/><g class="a-breathe"><circle class="mv-head" cx="62" cy="86" r="13"/><line class="mv" stroke-width="9" x1="74" y1="95" x2="178" y2="110"/></g><line class="fig" stroke-width="8" x1="80" y1="101" x2="75" y2="126"/><line class="fig" stroke-width="8" x1="100" y1="104" x2="95" y2="126"/><line class="fig" stroke-width="8" x1="163" y1="109" x2="168" y2="126"/><line class="fig" stroke-width="8" x1="178" y1="111" x2="183" y2="126"/><line stroke="#C8FF3E" stroke-width="1.5" opacity="0.5" x1="125" y1="94" x2="125" y2="78"/><line stroke="#C8FF3E" stroke-width="1.5" opacity="0.5" x1="138" y1="96" x2="138" y2="80"/></svg>`,
+  generic:`<svg viewBox="0 0 240 165"><text x="120" y="160" class="mlbl">Dumbbells</text><circle class="fig-head" cx="120" cy="32" r="13"/><line class="fig" stroke-width="9" x1="120" y1="45" x2="120" y2="105"/><line class="fig" stroke-width="7" x1="120" y1="105" x2="100" y2="148"/><line class="fig" stroke-width="7" x1="120" y1="105" x2="140" y2="148"/><g class="a-breathe"><line class="mv" stroke-width="7" x1="120" y1="68" x2="88" y2="85"/><line class="mv" stroke-width="7" x1="120" y1="68" x2="152" y2="85"/><rect class="wt" x="78" y="80" rx="4" width="13" height="10"/><rect class="wt" x="148" y="80" rx="4" width="13" height="10"/></g></svg>`
 };
 function getMovementKey(name, equip) {
   const n = ((name||'')+' '+(equip||'')).toLowerCase();
@@ -745,7 +780,12 @@ function openPanelByIndex(el) {
 }
 function openPanel(ex) {
   document.getElementById('ep-name').textContent = ex.name || 'Exercise';
-  document.getElementById('ep-equipment').textContent = ex.equipment || '—';
+  // Show equipment as coloured tags
+  const eqList = (ex.equipment||'').split(/[,+&\/]/).map(e=>e.trim()).filter(Boolean);
+  const eqHTML = eqList.length
+    ? eqList.map(e=>`<span style="display:inline-block;background:rgba(200,255,62,.1);color:var(--lime-dim);font-size:.72rem;padding:2px 8px;border-radius:4px;margin:2px 3px 2px 0;">${esc(e)}</span>`).join('')
+    : '<span style="color:var(--muted);font-size:.82rem;">—</span>';
+  document.getElementById('ep-equipment').innerHTML = eqHTML;
   document.getElementById('ep-demo').innerHTML = getExerciseDemoSVG(ex.name, ex.equipment);
   document.getElementById('ep-musclemap').innerHTML = muscleMapSVG(ex.muscles);
   document.getElementById('ep-sets').textContent = ex.sets!=null ? ex.sets : '—';
@@ -939,6 +979,7 @@ async function generatePlan() {
   const age=document.getElementById('age').value, height=document.getElementById('height').value, weight=document.getElementById('weight').value;
   const targetWeight=document.getElementById('target_weight').value, gender=document.getElementById('gender').value;
   const fitnessLevel=document.getElementById('fitness_level').value, daysWeek=parseInt(document.getElementById('days_week').value), duration=document.getElementById('duration').value;
+  const injuries=document.getElementById('injuries').value.trim();
   const goals=getGoals(), errorEl=document.getElementById('error-msg');
   errorEl.classList.remove('visible');
 
@@ -954,20 +995,24 @@ async function generatePlan() {
   document.getElementById('diet-panel').innerHTML='';
   document.getElementById('results-section').scrollIntoView({behavior:'smooth',block:'start'});
 
-  const workoutPrompt = `Create a ${daysWeek}-day weekly workout plan (include all 7 days, mark non-training days as rest).
+  const injuryNote = injuries ? `INJURIES/LIMITATIONS: ${injuries}. Avoid exercises that stress these areas. Substitute safer alternatives where needed.` : '';
+  const workoutPrompt = `Create a workout plan with exactly ${daysWeek} training day objects. The weeklySchedule array must have EXACTLY ${daysWeek} entries — no more, no less. Do NOT add extra or rest days.
 Profile: Age ${age}, Gender ${gender||'unspecified'}, Height ${height}cm, Weight ${weight}kg, BMI ${bmi}, Target ${targetWeight||'n/a'}kg, Level ${fitnessLevel}, Goals: ${goals.join(', ')}, Session ${duration}.
+${injuryNote}
 Use ONLY this equipment: ${EQUIPMENT.join(', ')}.
 Output a JSON object with this exact shape:
-{"weeklySchedule":[{"day":"Monday","label":"Upper Body Strength","restDay":false,"exercises":[{"name":"...","sets":3,"reps":"10-12","rest":"60s","equipment":"...","muscles":"Primary, Secondary","howTo":["step 1","step 2","step 3"],"tip":"one tip","mistake":"one mistake"}]}],"notes":"short weekly note"}
-Rules: 4-5 exercises per training day. howTo = exactly 3 short steps. rest days have "restDay":true and "exercises":[]. Keep all text concise.`;
+{"weeklySchedule":[{"day":"Monday","label":"Upper Body Strength","restDay":false,"warmup":[{"name":"Arm circles","duration":"1 min"},{"name":"Shoulder rolls","duration":"1 min"},{"name":"Light jog in place","duration":"2 min"}],"exercises":[{"name":"...","sets":3,"reps":"10-12","rest":"60s","equipment":"exact equipment name","muscles":"Primary, Secondary","howTo":["step 1 with form cue","step 2","step 3"],"tip":"one specific tip","mistake":"one common mistake"}],"cooldown":[{"name":"Chest stretch","duration":"1 min"},{"name":"Tricep stretch","duration":"1 min"},{"name":"Deep breathing","duration":"1 min"}]}],"notes":"short coaching note"}
+Rules: Exactly ${daysWeek} array entries. 4 exercises per training day. warmup = 3 items, cooldown = 3 items. howTo = exactly 3 steps. Keep all text short. ${injuryNote ? 'Modify any exercise that risks the listed injury — replace with injury-safe alternatives.' : ''}`;
 
-  const dietPrompt = `Create a 7-day ${dietChoice} meal plan with full recipes.
+  const dietPrompt = `Create a 7-day ${dietChoice} meal plan using ONLY cheap, locally available Indian grocery store ingredients. No imported superfoods.
 Profile: Age ${age}, ${gender||''}, ${height}cm, ${weight}kg, BMI ${bmi}, Goals: ${goals.join(', ')}.
-${dietChoice==='non-vegetarian'?'Include lean proteins: chicken, eggs, fish, turkey.':'Strictly vegetarian: tofu, paneer, legumes, dairy OK. No meat/fish/egg.'}
-Base meals on healthy grain bowls and whole foods.
+${dietChoice==='non-vegetarian'
+  ? 'Proteins: eggs, chicken, pomfret/surmai/tilapia fish, mutton (occasional). All locally available at any Indian market.'
+  : 'Strictly vegetarian. Proteins: moong dal, chana dal, rajma, chole, masoor dal, paneer, curd/dahi, sprouts, peanuts, besan. No meat, fish, eggs.'}
+Use ONLY these ingredient categories: Indian dals & legumes (moong, chana, rajma, masoor, toor, urad), grains (rice/brown rice, wheat atta/roti/chapati, poha, oats, jowar, bajra), vegetables (spinach/palak, methi, cauliflower, carrot, tomato, onion, peas, brinjal, bottle gourd, seasonal sabzi), fruits (banana, papaya, guava, apple, orange, chikoo), dairy (curd/dahi, paneer, milk, buttermilk/chaas), nuts (peanuts, cashews), spices (jeera, turmeric, coriander, garam masala). All items available at any kirana store or sabzi mandi.
 Output a JSON object with this exact shape:
-{"calories":1800,"macros":{"protein":"150g","carbs":"180g","fat":"55g"},"mealPlan":[{"day":"Monday","breakfast":{"name":"...","desc":"short","calories":420,"protein":"25g","fiber":"8g","ingredients":[{"item":"Rolled oats","amount":"50g"},{"item":"Greek yogurt","amount":"100g"}],"recipe":["step 1","step 2","step 3"]},"lunch":{"name":"...","desc":"short","calories":550,"protein":"35g","fiber":"10g","ingredients":[{"item":"...","amount":"..."}],"recipe":["step 1","step 2"]},"dinner":{"name":"...","desc":"short","calories":520,"protein":"30g","fiber":"9g","ingredients":[{"item":"...","amount":"..."}],"recipe":["step 1","step 2"]}}],"tips":["tip 1","tip 2","tip 3"]}
-Rules: include all 7 days. Each meal needs calories, protein, fiber, 4-6 ingredients with amounts, and 3 short recipe steps. Skip the mid-morning snack to save space. Keep all text concise.`;
+{"calories":1800,"macros":{"protein":"150g","carbs":"180g","fat":"55g"},"mealPlan":[{"day":"Monday","breakfast":{"name":"...","desc":"short","calories":420,"protein":"25g","fiber":"8g","ingredients":[{"item":"Rolled oats","amount":"50g"},{"item":"Curd/Dahi","amount":"100g"}],"recipe":["step 1","step 2","step 3"]},"lunch":{"name":"...","desc":"short","calories":550,"protein":"35g","fiber":"10g","ingredients":[{"item":"...","amount":"..."}],"recipe":["step 1","step 2"]},"dinner":{"name":"...","desc":"short","calories":520,"protein":"30g","fiber":"9g","ingredients":[{"item":"...","amount":"..."}],"recipe":["step 1","step 2"]}}],"tips":["tip 1","tip 2","tip 3"]}
+Rules: All 7 days. Each meal: calories, protein, fiber, 4-5 ingredients, 3 short recipe steps. No quinoa, tahini, avocado, almond butter, chia seeds, or other expensive imports. Keep text concise.`;
 
   try {
     const workoutRaw = await callGroqSmart(workoutPrompt, 4500, 'workout-panel');
